@@ -1,0 +1,4 @@
+(executable
+ (public_name clans)
+ (name main)
+ (libraries clans))
