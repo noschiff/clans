@@ -1,2 +1,2 @@
-(test
- (name clans))
+(executable
+ (name main))

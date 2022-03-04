@@ -1,4 +1,4 @@
-let init x = ()
+let init event_handler = raise (Failure "Unimplemented")
 
 let save_to_file filename = ()
 

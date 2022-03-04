@@ -1,0 +1,4 @@
+(library
+ (name clans)
+ (public_name Clans)
+ (libraries bogue))
