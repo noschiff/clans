@@ -4,7 +4,22 @@ controlling what appears on the screen by relaying information from the controll
 type t
 (** The abstract type of values representing the view and its current state *)
 
-val init : t
+type event
+(** An abstract type representing an event. Passed into an event handler *)
+
+type event_handler = event -> unit
+
+type interaction_manager = {
+    getcell : event_handler;
+    setcell : event_handler;
+    play : event_handler;
+    pause : event_handler;
+    save : event_handler;
+    load : event_handler
+}
+
+val init : interaction_manager -> t
+
 (** [init] Initializes the view with preset settings. *)
 
 val is_initialized : t -> bool
@@ -15,20 +30,6 @@ val render : t -> t
 (** [render] Re-renders the view with the new data.
     Pre-condition: The view must already be initialized. *)
 
-val get_cell : t -> int -> int -> unit
-(** [get_cell] Gets the cell at the specified [x] and [y]
-    coordinates, and returns the data about that cell.
-    Pre-conditions: The view must already be initialized, and the coordinates must be a valid range *)
+val set_zoom : t -> float -> float -> float -> t
+(** [set_zoom state x y zoom] Sets the zoom of the main window to [zoom] and centers it at ([x], [y]).*)
 
-val set_cell : t -> int -> int -> string -> t
-(** [set_cell] Sets the cell at the specified [x] and [y]
-    coordinates with the specified data.
-    Pre-conditions: The view must already be initialized, and the coordinates must be a valid range *)
-
-val zoom_in : t -> int -> t
-(** [zoom_in] Zooms into the view with the specified magnitude.
-    Pre-conditions: The view must already be initialized *)
-
-val zoom_out : t-> int -> t
-(** [zoom_in] Zooms out from the view with the specified magnitude.
-    Pre-conditions: The view must already be initialized *)
