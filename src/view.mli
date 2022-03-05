@@ -28,3 +28,6 @@ val render : t -> t
 
 val set_zoom : t -> float -> float -> float -> t
 (** [set_zoom state x y zoom] Sets the zoom of the main window to [zoom] and centers it at ([x], [y]).*)
+
+val draw_cell : t -> int -> int -> Model.cell -> t
+(** Draw a cell at a position *)

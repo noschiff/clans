@@ -19,6 +19,6 @@ type interaction_manager = {
   load : event_handler;
 }
 
-let init interaction_manager = failwith "Unimplemented"
+let init interactionmanager = failwith "Unimplemented"
 let render view = failwith "Unimplemented"
 let set_zoom view dx dy zoom = failwith "Unimplemented"
