@@ -1,11 +1,16 @@
 type life = { nation : string }
-type cell = Cell of life | Wall | Empty 
+
+type cell =
+  | Cell of life
+  | Wall
+  | Empty
+
 type world = cell array array
 
 let new_world dimx dimy = Array.make_matrix dimx dimy Empty
-
+let make_life nation = { nation }
 let get_cell world x y = failwith "TODO"
-let get_size world = (0, 0)
+let get_size world = (Array.length world, Array.length world.(0))
 let get_nation cell = failwith "TODO"
 let get_coordinate cell = (0, 0)
 let simulate world = world

@@ -7,11 +7,19 @@ type world
 type life
 (** Abstract type that represents a single cell life form in the world*)
 
-type cell
-(** Abstract type that represents a cell in the world at a specific coordinate*)
+type cell =
+  | Cell of life
+  | Wall
+  | Empty
+      (** Type that represents a cell in the world at a specific
+          coordinate*)
 
 val new_world : int -> int -> world
-(** [new_world dimx dimy] instantiates and returns a new world with no cells*)
+(** [new_world dimx dimy] instantiates and returns a new world with no
+    cells*)
+
+val make_life : string -> life
+(** [make_life nation] returns a new life form with specific attributes*)
 
 val get_cell : world -> int -> int -> cell
 (** [get_cell x y] Returns the cell at the specified [x] and [y].
