@@ -22,13 +22,9 @@ val init : interaction_manager -> t
 
 (** [init] Initializes the view with preset settings. *)
 
-val is_initialized : t -> bool
-(** [is_initialized] Checks to see whether or not the view has been initialized.
-    [render] requires that the view is initialized, or else it will not work. *)
-
 val render : t -> t
 (** [render] Re-renders the view with the new data.
     Pre-condition: The view must already be initialized. *)
-    
+
 val set_zoom : t -> float -> float -> float -> t
 (** [set_zoom state x y zoom] Sets the zoom of the main window to [zoom] and centers it at ([x], [y]).*)
