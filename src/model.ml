@@ -8,6 +8,8 @@ type cell =
 type world = cell array array
 
 let new_world dimx dimy = Array.make_matrix dimx dimy Empty
+
+let load_world cells = Array.of_list (List.map Array.of_list cells)
 let make_life nation = { nation }
 let get_cell world x y = failwith "TODO"
 let get_size world = (Array.length world, Array.length world.(0))

@@ -18,6 +18,9 @@ val new_world : int -> int -> world
 (** [new_world dimx dimy] instantiates and returns a new world with no
     cells*)
 
+val load_world : cell list list -> world
+(** [load world cells] returns a world from a list of cells*)
+
 val make_life : string -> life
 (** [make_life nation] returns a new life form with specific attributes*)
 
