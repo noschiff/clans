@@ -15,16 +15,6 @@ val render : t -> t
 (** [render] Re-renders the view with the new data.
     Pre-condition: The view must already be initialized. *)
 
-val get_cell : t -> int -> int -> unit
-(** [get_cell] Gets the cell at the specified [x] and [y]
-    coordinates, and returns the data about that cell.
-    Pre-conditions: The view must already be initialized, and the coordinates must be a valid range *)
-
-val set_cell : t -> int -> int -> string -> t
-(** [set_cell] Sets the cell at the specified [x] and [y]
-    coordinates with the specified data.
-    Pre-conditions: The view must already be initialized, and the coordinates must be a valid range *)
-
 val zoom_in : t -> int -> t
 (** [zoom_in] Zooms into the view with the specified magnitude.
     Pre-conditions: The view must already be initialized *)
