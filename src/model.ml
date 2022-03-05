@@ -1,5 +1,8 @@
-type cell = { nation : string }
+type life = { nation : string }
+type cell = Cell of life | Wall | Empty 
 type world = cell array array
+
+let new_world dimx dimy = Array.make_matrix dimx dimy Empty
 
 let get_cell world x y = failwith "TODO"
 let get_size world = (0, 0)

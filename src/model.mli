@@ -4,8 +4,14 @@
 type world
 (** Abstract type that represents the entire world*)
 
+type life
+(** Abstract type that represents a single cell life form in the world*)
+
 type cell
-(** Abstract type that represents a single cell in the world*)
+(** Abstract type that represents a cell in the world at a specific coordinate*)
+
+val new_world : int -> int -> world
+(** [new_world dimx dimy] instantiates and returns a new world with no cells*)
 
 val get_cell : world -> int -> int -> cell
 (** [get_cell x y] Returns the cell at the specified [x] and [y].
@@ -14,12 +20,8 @@ val get_cell : world -> int -> int -> cell
 val get_size : world -> int * int
 (** [get_size world] returns the size (length,width) of [world] *)
 
-val get_nation : cell -> string
+val get_nation : life -> string
 (** [get_nation cell] returns the nation of [cell] *)
-
-val get_coordinate : cell -> int * int
-(** [get_coordinate cell] returns the zero-indexed coordinates (x,y) of
-    [cell] *)
 
 val simulate : world -> world
 (** [simulate world] executes a simulation step *)
