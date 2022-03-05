@@ -30,3 +30,9 @@ _opam/
 
 # Workspace files
 .vscode
+
+# Bogue libraries
+*.dylib
+
+# Mac files
+*.DS_Store
