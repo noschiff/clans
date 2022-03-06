@@ -1,7 +1,3 @@
-open Bogue
-module W = Widget
-module L = Layout
-
 type t = {
   render_count : int;
   zoom : int;

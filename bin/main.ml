@@ -1,31 +1,31 @@
-open Bogue
-module W = Widget
-module L = Layout
+open Tyxml.Html
 
-let test_layout =
-  (* let input = W.text_input ~max_size:200 ~prompt:"Enter your name" ()
-     in *)
-  let main_panel = W.label ~size:40 "CLANS Main Screen" in
-  let side_panel =
-    W.rich_text ~size:16
-      [
-        Text_display.para
-          "Side Panel. This will have buttons and stuff.";
-      ]
-  in
-  let layout =
-    L.flat
-      ~name:"CLANS: Cellular Life-like Automonomus Nation Simulator"
-      [
-        L.resident ~w:200 side_panel;
-        L.resident ~w:400 ~h:400 main_panel;
-      ]
-  in
+(* Write in the mycontent and mytitle tags for the content and title
+   respectively using Tyxml formatting. index.html is the compiled
+   version of normal html, and I am currently working on making it so
+   that it can read normal html.*)
 
-  (* let action ti l _ = let text = W.get_text ti in W.set_text l
-     ("Hello " ^ text ^ "!") in let c = W.connect input label action
-     Trigger.[ text_input; key_down ] in *)
-  let board = Bogue.make [] [ layout ] in
-  Bogue.run board
+let mycontent =
+  div
+    ~a:[ a_class [ "content" ] ]
+    [
+      h1 [ txt "A not so fabulous title" ];
+      txt "This is not fabulous content.";
+    ]
 
-let main () = test_layout
+let mytitle = title (txt "A Not Fabulous Web Page")
+let mypage = html (head mytitle []) (body [ mycontent ])
+
+let () =
+  let file = open_out "index.html" in
+  let fmt = Format.formatter_of_out_channel file in
+  Format.fprintf fmt "%a@." (pp ~indent:true ()) mypage;
+  close_out file
+
+open Opium
+
+let no_subpages _req = Response.of_html mypage |> Lwt.return
+
+let () =
+  let open App in
+  App.empty |> App.get "/" no_subpages |> App.run_command |> ignore
