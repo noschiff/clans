@@ -5,10 +5,10 @@ val init : unit -> int
     event handler. *)
 (* Ari removed some Bogue dependencies to make it compile *)
 
-val save_to_file : string -> unit
+val save_to_file : string -> Model.world -> unit
 (** [save_to_file file] Saves the currently open model to [file]. *)
 
-val load_from_file : string -> unit
+val load_from_file : string -> Model.world
 (** Load a model from file *)
 
 val display_cell : int -> int -> unit
