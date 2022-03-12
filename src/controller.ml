@@ -1,4 +1,22 @@
-let init event_handler = failwith "Unimplemented"
+type state = {
+	world: Model.world;
+	view: View.t
+}
+
+let init event_handler = {
+	world = Model.new_world 100 100;
+	view = View.init ()
+}
+
+let set_world state world = {
+	world = world;
+	view = state.view
+}
+
+let set_view state view = {
+	world = state.world;
+	view = view
+}
 
 let cell_to_json = function
 	| Model.Empty -> `Assoc ([("type", `String "empty")])
@@ -19,10 +37,10 @@ let cell_from_json json =
 		| _ -> raise (Invalid_argument "Invalid world JSON.")
 	)
 
-let save_to_file filename world = 
+let save_to_file filename state = 
 	`Assoc ([("world",
 		`List (
-			world |> Model.get_world
+			state.world |> Model.get_world
 			|> List.map (fun x -> 
 				`List (
 					x
@@ -33,19 +51,19 @@ let save_to_file filename world =
 	)])
 	|> Yojson.Basic.to_file filename
 
-let load_from_file filename = 
-	let open Yojson.Basic.Util in
-	Yojson.Basic.from_file filename 
-	|> to_assoc 
-	|> List.assoc "world"
-	|> to_list
-	|> List.map (fun x-> x 
-		|> to_list 
-		|> List.map cell_from_json
-	) |> Model.load_world
+let load_from_file state filename = 
+	let open Yojson.Basic.Util in Yojson.Basic.from_file filename 
+		|> to_assoc 
+		|> List.assoc "world"
+		|> to_list
+		|> List.map (fun x-> x 
+			|> to_list 
+			|> List.map cell_from_json
+		) |> Model.load_world
+		|> set_world state
 
-let display_cell x y = ()
+let display_cell state x y = Model.get_cell state.world x y
+	|> View.draw_cell state.view x y
+	|> set_view state
 
-let update_zoom scale dx dy = ()
-
-let step () = ()
+let step state = failwith "Unimplemented"

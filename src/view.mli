@@ -5,22 +5,7 @@ type t
 (** The abstract type of values representing the view and its current
     state *)
 
-type event
-(** An abstract type representing an event. Passed into an event handler *)
-
-type event_handler = event -> unit
-
-type interaction_manager = {
-  getcell : event_handler;
-  setcell : event_handler;
-  play : event_handler;
-  pause : event_handler;
-  save : event_handler;
-  load : event_handler;
-}
-
-val init : interaction_manager -> t
-
+val init : unit -> t
 (** [init] Initializes the view with preset settings. *)
 
 val render : t -> t
