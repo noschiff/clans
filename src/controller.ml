@@ -66,4 +66,10 @@ let display_cell state x y = Model.get_cell state.world x y
 	|> View.draw_cell state.view x y
 	|> set_view state
 
-let step state = failwith "Unimplemented"
+let update_cell state x y cell =
+	Model.inject_cell state.world x y cell
+	|> set_world state
+
+let step state = 
+	set_world state @@ Model.simulate state.world
+	|> (fun x -> set_view x @@ View.render x.view)

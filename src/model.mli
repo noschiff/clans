@@ -45,7 +45,7 @@ val clear_cell : world -> int -> int -> world
 (** [set_cell x y] Clears the cell at the specified [x] and [y]
     coordinates. Pre-conditions: the coordinates must be a valid range *)
 
-val inject_cell : world -> int -> int -> string -> world
+val inject_cell : world -> int -> int -> cell -> world
 (** [inject_cell x y] Sets the cell at the specified [x] and [y]
     coordinates with the specified data Pre-conditions: the coordinates
     must be a valid range *)
