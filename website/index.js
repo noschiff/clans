@@ -92,7 +92,7 @@ function updateCellInformation() {
  * @returns The Cell object at the canvas coords
  */
 function getCellFromCanvasCoords(x, y) {
-  if (!world.isInBounds(x, y)) {
+  if (!world.isInBounds(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE))) {
     return null;
   }
   return world.getCell(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE));
@@ -208,6 +208,7 @@ window.onload = function () {
     var x = e.offsetX == undefined ? e.layerX : e.offsetX;
     var y = e.offsetY == undefined ? e.layerY : e.offsetY;
     var cell = getCellFromCanvasCoords(x, y);
+    console.log(cell);
     setHighlightedCell(ctx, cell);
   });
 
