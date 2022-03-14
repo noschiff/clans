@@ -1,31 +1,42 @@
-open Tyxml.Html
-
-(* Write in the mycontent and mytitle tags for the content and title
-   respectively using Tyxml formatting. index.html is the compiled
-   version of normal html, and I am currently working on making it so
-   that it can read normal html.*)
-
-let mycontent =
-  div
-    ~a:[ a_class [ "content" ] ]
-    [
-      h1 [ txt "A not so fabulous title" ];
-      txt "This is not fabulous content.";
-    ]
-
-let mytitle = title (txt "A Not Fabulous Web Page")
-let mypage = html (head mytitle []) (body [ mycontent ])
-
-let () =
-  let file = open_out "index.html" in
-  let fmt = Format.formatter_of_out_channel file in
-  Format.fprintf fmt "%a@." (pp ~indent:true ()) mypage;
-  close_out file
-
 open Opium
 
-let no_subpages _req = Response.of_html mypage |> Lwt.return
+let ( let* ) = Lwt.bind
+(** [local_port] is the port on which the server will run. *)
+let local_port = 3000
 
-let () =
-  let open App in
-  App.empty |> App.get "/" no_subpages |> App.run_command |> ignore
+(* GET /messages *)
+let request =
+  App.get "/messages" (fun _request ->
+      let* messages = Server.request () in
+      let json = [%to_yojson: Server.message list] messages in
+      Lwt.return (Response.of_json json))
+
+(* POST /messages *)
+let response =
+  App.post "/messages" (fun request ->
+      let* input_json = Request.to_json_exn request in
+      let input_message =
+        match Server.message_of_yojson input_json with
+        | Ok message -> message
+        | Error error -> raise (Invalid_argument error)
+      in
+      let* () = Server.response input_message in
+      Lwt.return (Response.make ~status:`OK ()))
+
+(* https://github.com/EduardoRFS/youtube-channel/blob/master/05-making-crud-in-ocaml/code/crud.ml
+   used as inspiration*)
+
+let app : Opium.App.t =
+  App.(empty
+  |> cmd_name "#clans;; backend"
+  |> port local_port |> request |> response)
+
+let _ =
+  match App.run_command' app with
+  | `Ok app ->
+      Printf.sprintf "starting #clans;; server on port %i \n" local_port
+      |> print_endline;
+      Lwt_main.run app
+  | `Error -> exit 1
+  | `Not_running -> exit 0
+(*https://github.com/ptwu/outbreak/blob/master/src/server.ml used as inspiration*)

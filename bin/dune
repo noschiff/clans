@@ -1,3 +1,5 @@
 (executable
  (name main)
- (libraries Clans))
+ (libraries Clans opium yojson core ppx_deriving_yojson.runtime)
+ (preprocess
+  (pps ppx_deriving_yojson)))
