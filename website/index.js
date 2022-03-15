@@ -176,7 +176,7 @@ function openWorldFile() {
 
   if (input.files.length > 0) {
     var file = input.files[0];
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = event => {
       alert("JSON Content: \n" + event.target.result);
 
@@ -187,6 +187,12 @@ function openWorldFile() {
   } else {
     alert("No file...");
   }
+}
+
+function getInformation() {
+  fetch('http://localhost:3000/get')
+    .then(response => response.json())
+    .then(data => console.log(data));
 }
 
 /**

@@ -1,10 +1,3 @@
-(************************************************************
-   Copyright (C) 2022 Cornell University.
-   Created by Michael Clarkson (mrc26@cornell.edu) and CS 3110 course staff.
-   You may not redistribute this assignment, distribute any derivatives,
-   or use it for commercial purposes.
- ************************************************************)
-
 (** CS 3110 Spring 2022 Assignment MS1 Final Project
 
     @author Ari Mirsky, Edmund Lam, Noah Schiff, Rigel Wafford *)
@@ -26,5 +19,5 @@
 
  ************************************************************)
 
-val hours_worked : int
-(** [hours_worked] is the number of hours you worked on this assignment. *)
+val ms1_hours_worked : int
+(** [ms1_hours_worked] is the number of hours worked on MS1. *)
