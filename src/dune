@@ -1,6 +1,4 @@
 (library
  (name clans)
  (public_name Clans)
- (libraries opium yojson core ppx_deriving_yojson.runtime)
- (preprocess
-  (pps ppx_deriving_yojson)))
+ (libraries opium yojson))

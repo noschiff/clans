@@ -5,9 +5,9 @@
 The following opam packages are required for this program.
 
 * [opium](https://github.com/rgrinberg/opium) - `opam install opium`
-* [core](https://github.com/janestreet/core) - `opam install core`
+<!-- * [core](https://github.com/janestreet/core) - `opam install core` -->
 * [yojson](https://github.com/ocaml-community/yojson) - `opam install yojson`
-* [ppx_deriving_yojson](https://github.com/ocaml-ppx/ppx_deriving_yojson) - `opam install ppx_deriving_yojson`
+<!-- * [ppx_deriving_yojson](https://github.com/ocaml-ppx/ppx_deriving_yojson) - `opam install ppx_deriving_yojson` -->
 
 # Launching CLANS
 
