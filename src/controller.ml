@@ -3,8 +3,11 @@ type state = {
   view : Server.t;
 }
 
-let init event_handler =
-  { world = Model.new_world 100 100; view = Server.init () }
+(*let init event_handler = { world = Model.new_world 100 100; view =
+  Server.init () }
+
+  Improper call to server.init so I'm commenting it out for compilation
+  reasons rn*)
 
 let set_world state world = { world; view = state.view }
 let set_view state view = { world = state.world; view }
@@ -56,6 +59,8 @@ let display_cell state x y = state
 let update_cell state x y cell =
   Model.inject_cell state.world x y cell |> set_world state
 
-let step state =
-  set_world state @@ Model.simulate state.world |> fun x ->
-  set_view x @@ Server.render x.view
+(*let step state = set_world state @@ Model.simulate state.world |> fun
+  x -> set_view x @@ Server.render x.view
+
+  Improper call to server.render so I'm commenting it out for
+  compilation reasons rn*)
