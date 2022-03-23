@@ -1,29 +1,30 @@
-let ( let* ) = Lwt.bind
-let message_file = "index.html"
-let recieve _ = Lwt.return None
-(*Lwt_io.with_file ~mode:Input message_file (fun input_channel -> let*
-  message_string = Lwt_io.read_lines input_channel |> Lwt_stream.to_list
-  in let message_json = Yojson.Safe.from_string (String.concat "\n"
-  message_string) in match [%of_yojson: message list] message_json with
-  | Ok messages -> Lwt.return messages | Error error -> raise
-  (Invalid_argument error))
+open Opium
 
-  To be implimented properly, but temprarily commented out so it
-  compiles*)
+type t = Yojson.Safe.t option -> unit
 
-let respond _ = Yojson.Basic.from_string ""
-(* let* messages = request () in let messages = m :: messages in
-   Lwt_io.with_file ~mode:Output message_file (fun output_channel -> let
-   messages_string = messages |> [%to_yojson: message list] |>
-   Yojson.Safe.pretty_to_string in Lwt_io.write output_channel
-   messages_string)
+let get req =
+  let content = Body.to_string req.Request.body in
+  Lwt.bind content (fun x ->
+      x |> Yojson.Safe.from_string |> Response.of_json |> Lwt.return)
 
-   To be implimented properly, but temprarily commented out so it
-   compiles*)
+let post (push : t) req =
+  let json = req |> Request.to_json_exn in
+  Lwt.bind json (fun x -> Some x |> push |> Lwt.return);
+  (fun _json ->
+    Lwt.return
+      (Response.make ~body:(Body.of_string "Received response") ()))
+    json
 
-type t = int
-(* To be implimented properly, but temprarily commented exists so
-   controller.ml compiles*)
-
-let init () = 0
-let render a = a
+let init (push : Yojson.Safe.t option -> unit) : t =
+  begin
+    match
+      App.empty |> App.port 3000 |> App.cmd_name "clans"
+      |> App.get "/" get
+      |> App.post "/" (post push)
+      |> App.run_command'
+    with
+    | `Ok (app : unit Lwt.t) -> Lwt_main.run app
+    | `Error -> exit 1
+    | `Not_running -> exit 0
+  end;
+  push
