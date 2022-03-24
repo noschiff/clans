@@ -191,8 +191,16 @@ function openWorldFile() {
 
 function getInformation() {
   fetch('http://localhost:3000/get')
-    .then(response => response.json())
-    .then(data => console.log(data));
+
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      }
+    })
+    .then(data => alert("Successful fetch:" + data))
+    .catch(reason => {
+      alert("Could not get info from http://localhost:3000/get. Error: " + reason)
+    });
 }
 
 /**
@@ -214,7 +222,6 @@ window.onload = function () {
     var x = e.offsetX == undefined ? e.layerX : e.offsetX;
     var y = e.offsetY == undefined ? e.layerY : e.offsetY;
     var cell = getCellFromCanvasCoords(x, y);
-    console.log(cell);
     setHighlightedCell(ctx, cell);
   });
 
