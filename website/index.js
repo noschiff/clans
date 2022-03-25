@@ -190,14 +190,33 @@ function openWorldFile() {
 }
 
 function getInformation() {
-  fetch('http://localhost:3000/get')
+  fetch('http://localhost:3000/get', {
+    method: 'GET'
+  }).then(response => {
+    console.log(response);
+    if (response.ok) {
+      return response.json();
+    }
+    throw new Error("Not OK");
+  })
+    .then(data => alert("Successful fetch:" + JSON.stringify(data)))
+    .catch(reason => {
+      alert("Could not get info from http://localhost:3000/get. Error: " + reason)
+    });
+}
 
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-    })
-    .then(data => alert("Successful fetch:" + data))
+function postCellInformation(data) {
+  fetch('http://localhost:3000/post_cell', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }).then(response => {
+    console.log(response);
+    if (response.ok) {
+      return response.json();
+    }
+    throw new Error("Not OK");
+  })
+    .then(data => alert("Successful post:" + JSON.stringify(data)))
     .catch(reason => {
       alert("Could not get info from http://localhost:3000/get. Error: " + reason)
     });
@@ -254,6 +273,12 @@ window.onload = function () {
       selectedCell.nation = "";
     }
     selectedCell.type = document.getElementById("selCellType").value;
+    postCellInformation({
+      x: selectedCell.x,
+      y: selectedCell.y,
+      type: selectedCell.type,
+      nation: selectedCell.nation
+    })
     updateCellInformation();
     renderCellAtCoordinate(ctx, selectedCell.x, selectedCell.y);
   });
