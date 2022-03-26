@@ -22,13 +22,18 @@ let get_cell (world : world) (x : int) (y : int) =
    Commented it out because it doesn't compile >:( *)
 
 let get_size world = (Array.length world, Array.length world.(0))
+let get_nation life = life.nation
+(* function | Cell life -> life.nation | _ -> ""
 
-let get_nation = function
-  | Cell life -> life.nation
-  | _ -> ""
+   More non-compiling code >:( *)
 
 let get_coordinate cell = (0, 0)
 let simulate world = world
 let clear_cell world x y = world
-let inject_cell world x y nation = world.(y).(x) <- { nation }
+let inject_cell world x y (nation : cell) = world
+(*world.(y).(x) <- { nation }
+
+  For the love of god please make sure your code at least compiles
+  before pushing it.*)
+
 let to_json = failwith "EDMUND"

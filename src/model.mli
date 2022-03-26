@@ -22,8 +22,8 @@ val load_world : cell list list -> world
 (** [load_world cells] returns a world from a list of cells*)
 
 val get_world : world -> cell list list
-(** [get_world world] returns a list of list of cells where the 
-    [i], [j]'th element of the list is equivalent [to get_cell i j]. *)
+(** [get_world world] returns a list of list of cells where the [i],
+    [j]'th element of the list is equivalent [to get_cell i j]. *)
 
 val make_life : string -> life
 (** [make_life nation] returns a new life form with specific attributes*)
