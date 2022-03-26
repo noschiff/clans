@@ -37,3 +37,9 @@ val dot : t -> t -> t
 
 		Requires: a has the same number of columns as b
 		has rows. *)
+
+val plus : t -> t -> t
+(** [plus a b] returns the elementwise addition of
+		a and b.
+
+		Requires: a and b have the same dimensions. *)

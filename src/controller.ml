@@ -1,16 +1,8 @@
-type state = {
-  world : Model.world;
-  view : Server.t;
-}
+type state = Model.world
 
-(*let init event_handler = { world = Model.new_world 100 100; view =
-  Server.init () }
+let init event_handler = Server.init event_handler; Model.new_world 100 100
 
-  Improper call to server.init so I'm commenting it out for compilation
-  reasons rn*)
-
-let set_world state world = { world; view = state.view }
-let set_view state view = { world = state.world; view }
+let set_world state world = world
 
 let cell_to_json (l:Model.life option) =
   match l with
@@ -38,7 +30,7 @@ let save_to_file filename state =
     [
       ( "world",
         `List
-          (state.world |> Model.get_world
+          (state |> Model.get_world
           |> List.map (fun x -> `List (x |> List.map cell_to_json))) );
     ]
   |> Yojson.Basic.to_file filename
@@ -58,7 +50,7 @@ let display_cell state x y = state
   compiles*)
 
 let update_cell state x y cell : state=
-  Model.set_cell state.world x y cell; state
+  Model.set_cell state x y cell; state
   (** EDMUND: now that world is mutable, do we need to make this return state?*)
 
 (*let step state = set_world state @@ Model.simulate state.world |> fun

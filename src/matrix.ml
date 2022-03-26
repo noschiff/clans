@@ -36,3 +36,8 @@ let dot a b =
 			|> Array.fold_left ( +. ) 0.
 		)
 	)
+
+let plus a b = 
+	Array.map2 (fun ra rb ->
+		Array.map2 ( +. ) ra rb
+	) a b
