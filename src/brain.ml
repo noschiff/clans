@@ -50,6 +50,24 @@ let create i o m l =
     out = Array.make o 0.;
   }
 
-let eval brain inp = failwith "Unimplemented"
+let eval brain inp = 
+	let rec e i r = match (Array.length brain.weights - i) with
+		| 0 -> r
+		| _ -> Matrix.dot r brain.weights.(i)
+			|> Matrix.plus brain.biases.(i)
+			|> e (i+1)
+	in Array.append (Array.of_list inp) brain.mem
+		|> Array.to_list
+		|> (fun x -> Matrix.of_list [x])
+		|> e 0
+		|> Matrix.row 0
+		|> Array.of_list
+		|> (fun x -> {
+			brain with
+			out = Array.sub x 0 (Array.length brain.out);
+			mem =  Array.sub x (Array.length brain.out) (Array.length brain.mem)
+		})
+	
+
 let out brain = Array.to_list brain.out
 let mem brain = Array.to_list brain.mem
