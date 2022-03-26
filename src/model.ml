@@ -14,7 +14,13 @@ let load_world (cells : cell list list) =
 
 let get_world world = Array.to_list (Array.map Array.to_list world)
 let make_life nation = { nation }
-let get_cell world x y = world |> Array.get y |> Array.get x
+
+let get_cell (world : world) (x : int) (y : int) =
+  Array.get (Array.get world 0) 0
+(* world |> Array.get y |> Array.get x
+
+   Commented it out because it doesn't compile >:( *)
+
 let get_size world = (Array.length world, Array.length world.(0))
 
 let get_nation = function
@@ -24,5 +30,5 @@ let get_nation = function
 let get_coordinate cell = (0, 0)
 let simulate world = world
 let clear_cell world x y = world
-let inject_cell world x y nation = world.(y).(x) <- {nation}
+let inject_cell world x y nation = world.(y).(x) <- { nation }
 let to_json = failwith "EDMUND"
