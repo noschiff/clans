@@ -28,7 +28,27 @@ let new_world dim_x dim_y : world =
   }
 
 let load_world cells = failwith "unimplemented"
-let get_world world = failwith "unimplemented"
+
+let rec helper hashtbl counter max : life option list =
+  if counter = max then []
+  else
+    begin
+      (try Some !(Hashtbl.find hashtbl counter) with
+      | Not_found -> None)
+      :: helper hashtbl (counter + 1) max
+    end
+
+(** TODO: make sure isn't reversed lol*)
+let get_world world =
+  let rec halp curr_row =
+    if curr_row = world.dim_y then
+      helper world.cells
+        (curr_row * world.dim_x)
+        (world.dim_y * world.dim_x)
+      :: halp (curr_row + 1)
+    else []
+  in
+  halp 0
 
 let generate_random_life (world : world) x y =
   let idx = to_index world x y in
