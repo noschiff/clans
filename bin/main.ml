@@ -11,4 +11,4 @@ let rec post _ =
        (*Controller.send_something*))
     (fun x -> post x)
 
-let _ = () (*Lwt_main.run (post ())*)
+let _ = Lwt_main.run (post ())
