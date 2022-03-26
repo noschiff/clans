@@ -26,5 +26,4 @@ let post (push : t) req =
 let init (push : Yojson.Safe.t option -> unit) =
   App.empty |> App.port 3000 |> App.get "/get" get
   |> App.post "/post_cell" post_cell
-  (* |> App.get "/index.html" get_html |> App.post "/" (post push) *)
   |> App.run_command
