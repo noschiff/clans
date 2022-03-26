@@ -60,4 +60,16 @@ let simulate world = ()
 let clear_cell world x y = ()
 let inject_cell world x y nation = ()
 let set_cell world x y life = failwith "TODO"
-let to_json = failwith "EDMUND"
+
+let cell_to_json (l : life option) =
+  match l with
+  | None -> `Assoc [ ("type", `String "empty") ]
+  | Some x ->
+      `Assoc
+        [
+          ("type", `String "life");
+          ("nation", `Int x.nation);
+          ("energy", `Float x.energy);
+        ]
+
+let cell_from_json = failwith "TODO"

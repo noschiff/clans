@@ -4,14 +4,6 @@ type state
 (** state representing the state of a current program, containing
     information on a view and a model. *)
 
-val cell_to_json : Model.life option -> Yojson.Basic.t
-(** [cell_to_json cell] converts a cell [cell] into its json
-    representation *)
-
-val cell_from_json : Yojson.Basic.t -> Model.life
-(** [cell_from_json json] creates a cell from its json representation
-    [json] *)
-
 val init : (Yojson.Safe.t option -> unit) -> state
 (** [init] creates the view and an empty model with an event handler. *)
 

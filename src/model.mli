@@ -52,3 +52,11 @@ val set_cell : world -> int -> int -> life -> unit
 (** [inject_cell x y] Sets the cell at the specified [x] and [y]
     coordinates with the specified data. Pre-conditions: the coordinates
     must be a valid range *)
+
+val cell_to_json : life option -> Yojson.Basic.t
+(** [cell_to_json cell] converts a cell [cell] into its json
+    representation *)
+
+val cell_from_json : Yojson.Basic.t -> life
+(** [cell_from_json json] creates a cell from its json representation
+    [json] *)
