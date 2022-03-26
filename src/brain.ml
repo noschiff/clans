@@ -1,6 +1,3 @@
-(* * @Author: UnsignedByte * @Date: 2022-03-24 17:24:35 * @Last Modified
-   by: UnsignedByte * @Last Modified time: 2022-03-24 21:07:26 *)
-
 type t = {
   weights : Matrix.t array;
   biases : Matrix.t array;
