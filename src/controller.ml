@@ -12,25 +12,26 @@ type state = {
 let set_world state world = { world; view = state.view }
 let set_view state view = { world = state.world; view }
 
-let cell_to_json = function
-  | Model.Empty -> `Assoc [ ("type", `String "empty") ]
-  | Model.Wall -> `Assoc [ ("type", `String "wall") ]
-  | Model.Cell l ->
+let cell_to_json (l:Model.life option) =
+  match l with
+  | None -> `Assoc [ ("type", `String "empty") ]
+  | Some _ ->
       `Assoc
         [
           ("type", `String "life");
-          ("data", `String (Model.get_nation l));
+          ("data", `String (Model.get_nation l |> string_of_int));
         ]
 
 let cell_from_json json =
-  let open Yojson.Basic.Util in
+  (* let open Yojson.Basic.Util in
   json |> to_assoc |> fun x ->
   match List.assoc "type" x |> to_string with
   | "empty" -> Model.Empty
   | "wall" -> Model.Wall
   | "life" ->
       Model.Cell (List.assoc "data" x |> to_string |> Model.make_life)
-  | _ -> raise (Invalid_argument "Invalid world JSON.")
+  | _ -> raise (Invalid_argument "Invalid world JSON.") *)
+  failwith "will fix later"
 
 let save_to_file filename state =
   `Assoc
@@ -56,8 +57,9 @@ let display_cell state x y = state
   To be implimented properly, but temprarily commented out so it
   compiles*)
 
-let update_cell state x y cell =
-  Model.inject_cell state.world x y cell |> set_world state
+let update_cell state x y cell : state=
+  Model.set_cell state.world x y cell; state
+  (** EDMUND: now that world is mutable, do we need to make this return state?*)
 
 (*let step state = set_world state @@ Model.simulate state.world |> fun
   x -> set_view x @@ Server.render x.view
