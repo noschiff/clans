@@ -29,44 +29,51 @@ let new_world dim_x dim_y : world =
 
 let load_world cells = failwith "unimplemented"
 
-let rec helper hashtbl counter max : life option list =
-  if counter = max then []
-  else
-    begin
-      (try Some !(Hashtbl.find hashtbl counter) with
-      | Not_found -> None)
-      :: helper hashtbl (counter + 1) max
-    end
-
 (** TODO: make sure isn't reversed lol*)
 let get_world world =
-  let rec halp curr_row =
-    if curr_row = world.dim_y then
-      helper world.cells
-        (curr_row * world.dim_x)
-        (world.dim_y * world.dim_x)
-      :: halp (curr_row + 1)
-    else []
+  let rec by_col hashtbl counter max : life option list =
+    if counter = max then []
+    else
+      begin
+        (try Some !(Hashtbl.find hashtbl counter) with
+        | Not_found -> None)
+        :: by_col hashtbl (counter + 1) max
+      end
   in
-  halp 0
+  let rec by_row curr_row =
+    if curr_row >= world.dim_y then [ [] ]
+    else
+      let this =
+        let offset = curr_row * world.dim_x in
+        by_col world.cells offset (world.dim_x + offset)
+      in
+      let next = by_row (curr_row + 1) in
+      match next with
+      | [ [] ] -> [ this ]
+      | _ -> this :: next
+  in
+  by_row 0
 
 let generate_random_life (world : world) x y =
-  let idx = to_index world x y in
-  match Hashtbl.find world.cells idx with
-  | exception Not_found ->
-      let life =
-        ref
-          {
-            x;
-            y;
-            brain = Brain.create 18 2 5 [ 10; 10; 5 ];
-            nation = 0;
-            energy = 100.;
-          }
-      in
-      Hashtbl.add world.cells idx life;
-      world.lifes := life :: !(world.lifes)
-  | _ -> raise (InvalidWorldOperation (x, y))
+  if x < 0 || x >= world.dim_x || y < 0 || y >= world.dim_y then
+    raise (InvalidWorldOperation (x, y))
+  else
+    let index = to_index world x y in
+    match Hashtbl.find world.cells index with
+    | exception Not_found ->
+        let life =
+          ref
+            {
+              x;
+              y;
+              brain = Brain.create 18 2 5 [ 10; 10; 5 ];
+              nation = index;
+              energy = 100.;
+            }
+        in
+        Hashtbl.add world.cells index life;
+        world.lifes := life :: !(world.lifes)
+    | _ -> raise (InvalidWorldOperation (x, y))
 
 let get_cell world x y = None
 let get_size world = (world.dim_x, world.dim_y)
@@ -91,5 +98,3 @@ let cell_to_json (l : life option) =
           ("nation", `Int x.nation);
           ("energy", `Float x.energy);
         ]
-
-let cell_from_json = failwith "TODO"

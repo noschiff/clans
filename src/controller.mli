@@ -1,6 +1,7 @@
 (** Handles commands to be sent to the model and renderer. *)
 
-type state
+(** NOTE: TEMPORARILY EXPOSING THIS SO I CAN TEST!!!!!*)
+type state = Model.world
 (** state representing the state of a current program, containing
     information on a view and a model. *)
 
@@ -20,6 +21,3 @@ val display_cell : state -> int -> int -> state
 val update_cell : state -> int -> int -> Model.life -> state
 (** [update_cell x y data] updates the cell at coordinates (x, y) with
     new cell data. *)
-
-(*val step : state -> state*)
-(** [step] steps the game simulation and updates the view as necessary *)

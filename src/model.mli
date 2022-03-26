@@ -56,7 +56,3 @@ val set_cell : world -> int -> int -> life -> unit
 val cell_to_json : life option -> Yojson.Basic.t
 (** [cell_to_json cell] converts a cell [cell] into its json
     representation *)
-
-val cell_from_json : Yojson.Basic.t -> life
-(** [cell_from_json json] creates a cell from its json representation
-    [json] *)
