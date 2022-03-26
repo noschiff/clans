@@ -1,12 +1,14 @@
 open Clans
 
 let s, p = Lwt_stream.create ()
+let original_state = Controller.init p
+(* Currently gives errors because model/to_json isn't implimented *)
 
-let rec recieve _ =
+let rec post _ =
   Lwt.bind
-    (Lwt.bind (Lwt_stream.last_new s) Controller.send_something)
-    (fun x -> recieve x)
+    (Lwt.bind (Lwt_stream.last_new s) (fun json ->
+         json |> Yojson.Safe.show |> print_endline |> Lwt.return)
+       (*Controller.send_something*))
+    (fun x -> post x)
 
-let _ =
-  Controller.init p;
-  recieve ()
+let _ = () (*Lwt_main.run (post ())*)
