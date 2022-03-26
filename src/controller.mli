@@ -12,7 +12,7 @@ val cell_from_json : Yojson.Basic.t -> Model.cell
 (** [cell_from_json json] creates a cell from its json representation
     [json] *)
 
-(*val init : unit -> state*)
+val init : (Yojson.Safe.t option -> unit) -> state
 (** [init] creates the view and an empty model with an event handler. *)
 
 val save_to_file : string -> state -> unit

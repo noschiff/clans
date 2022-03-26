@@ -3,11 +3,8 @@ type state = {
   view : Server.t;
 }
 
-(*let init event_handler = { world = Model.new_world 100 100; view =
-  Server.init () }
-
-  Improper call to server.init so I'm commenting it out for compilation
-  reasons rn*)
+let init event_handler = { world = Model.new_world 100 100; view =
+  Server.init event_handler }
 
 let set_world state world = { world; view = state.view }
 let set_view state view = { world = state.world; view }
