@@ -50,8 +50,9 @@ let create i o m l =
     out = Array.make o 0.;
   }
 
+  (* BROKEN :( *)
 let eval brain inp = 
-	let rec e i r = match (Array.length brain.weights - i) with
+	(* let rec e i r = match (Array.length brain.weights - i) with
 		| 0 -> r
 		| _ -> Matrix.dot r brain.weights.(i)
 			|> Matrix.plus brain.biases.(i)
@@ -66,7 +67,7 @@ let eval brain inp =
 			brain with
 			out = Array.sub x 0 (Array.length brain.out);
 			mem =  Array.sub x (Array.length brain.out) (Array.length brain.mem)
-		})
+		}) *) brain
 	
 
 let out brain = Array.to_list brain.out

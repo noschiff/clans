@@ -1,6 +1,6 @@
 (** Handles commands to be sent to the model and renderer. *)
 
-(** NOTE: TEMPORARILY EXPOSING THIS SO I CAN TEST!!!!!*)
+(* NOTE: TEMPORARILY EXPOSING THIS SO I CAN TEST!!!!!*)
 type state = Model.world
 (** state representing the state of a current program, containing
     information on a view and a model. *)

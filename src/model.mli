@@ -8,7 +8,8 @@ type world
 (** Mutable abstract type that represents the entire world*)
 
 type life
-(** Abstract type that represents a single cell life form in the world*)
+(** Mutable abstract type that represents a single cell life form in the
+    world*)
 
 val new_world : int -> int -> world
 (** [new_world dimx dimy] instantiates and returns a new world with no
@@ -37,22 +38,28 @@ val get_nation : life option -> int
 
 val simulate : world -> unit
 (** [simulate world] executes a simulation step, namely the action of a
-    single cell *)
+    single cell. Does nothing if there are no cells in the world.*)
 
 val clear_cell : world -> int -> int -> unit
 (** [set_cell x y] Clears the cell at the specified [x] and [y]
-    coordinates. Pre-conditions: the coordinates must be a valid range *)
+    coordinates. Does nothing if there is no cell at ([x],[y]) *)
 
-val inject_cell : world -> int -> int -> string -> unit
+val inject_cell : world -> int -> int -> int -> unit
 (** [inject_cell x y] Sets the cell at the specified [x] and [y]
     coordinates with the specified data. Pre-conditions: the coordinates
-    must be a valid range *)
+    must be a valid range. Raises InvalidWorldOperation (x,y) if there
+    is no life at coordinates (x,y). *)
 
 val set_cell : world -> int -> int -> life -> unit
 (** [inject_cell x y] Sets the cell at the specified [x] and [y]
     coordinates with the specified data. Pre-conditions: the coordinates
-    must be a valid range *)
+    must be a valid range. Raises InvalidWorldOperation (x,y) if there
+    is no life at coordinates (x,y). *)
 
 val cell_to_json : life option -> Yojson.Basic.t
 (** [cell_to_json cell] converts a cell [cell] into its json
     representation *)
+
+val get_queue_nations : world -> int list
+(** [get_queue_nations w] lists the nations of the lifes in the order
+    that they are being simulated. useful for testing only*)

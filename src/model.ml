@@ -85,41 +85,60 @@ let get_nation = function
 let get_coordinate cell = (cell.x, cell.y)
 let doAction lref = ()
 
+let property_of_offsets world x y property =
+  let offsets =
+    [
+      (0, 1);
+      (0, -1);
+      (1, 1);
+      (1, 0);
+      (1, -1);
+      (-1, 1);
+      (-1, 0);
+      (-1, -1);
+    ]
+  in
+  List.map
+    (fun (xoff, yoff) ->
+      try
+        property
+          !(Hashtbl.find world.cells
+              (to_index world (x + xoff) (y + yoff)))
+      with
+      | Not_found -> 0.0) (* Default value per Brain *)
+    offsets
+
 let simulate world =
   match world.lifes with
-  | [] -> raise (InvalidWorldOperation (-1, -1))
-  | lref :: t -> begin
+  | [] -> ()
+  | lref :: t ->
       let life = !lref in
-      try
-        let x = life.x in
-        let y = life.y in
-        !lref.brain <-
-          Brain.eval life.brain
-            (List.map
-               (fun (xoff, yoff) ->
-                 !(Hashtbl.find world.cells
-                     (to_index world (x + xoff) (y + yoff)))
-                   .energy)
-               [
-                 (0, 1);
-                 (0, -1);
-                 (1, 1);
-                 (1, 0);
-                 (1, -1);
-                 (-1, 1);
-                 (-1, 0);
-                 (-1, -1);
-               ]);
+      let x = life.x in
+      let y = life.y in
+      life.brain <-
+        Brain.eval life.brain
+          (property_of_offsets world x y (fun l -> l.energy)
+          @ property_of_offsets world x y (fun l ->
+                l.nation |> float_of_int));
+      doAction lref;
+      world.lifes <- t @ [ lref ]
 
-        doAction lref;
-        world.lifes <- t @ [ lref ]
-      with
-      | Not_found -> raise (InvalidWorldOperation (life.x, life.y))
-    end
+let clear_cell world x y =
+  Hashtbl.remove world.cells (to_index world x y);
+  world.lifes <-
+    List.filter (fun l -> !l.x <> x && !l.y <> y) world.lifes
 
-let clear_cell world x y = ()
-let inject_cell world x y nation = ()
-let set_cell world x y life = failwith "TODO"
+let inject_cell world x y nation =
+  try
+    !(Hashtbl.find world.cells (to_index world x y)).nation <- nation
+  with
+  | Not_found -> raise (InvalidWorldOperation (x, y))
+
+let set_cell world x y life =
+  try Hashtbl.find world.cells (to_index world x y) := life with
+  | Not_found -> raise (InvalidWorldOperation (x, y))
+
+let get_queue_nations world = List.map (fun x -> !x.nation) world.lifes
 
 let cell_to_json (l : life option) =
   match l with
