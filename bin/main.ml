@@ -27,12 +27,12 @@ let rec post _ =
     (Lwt.bind (Lwt_stream.last_new s) do_something_with_post_request)
     post
 
-let dummy =
+let main =
   if debug then print_endline "main called" else ();
-  let dummy2 =
+  let _ =
     Lwt_main.run (Lwt.both (Server.init p |> Lwt.return) (post ()))
   in
   if debug then
     print_endline "main wrapup (should not be called while running)"
   else ();
-  dummy2
+  ()

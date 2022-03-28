@@ -2,6 +2,8 @@ open Opium
 
 type t = Yojson.Safe.t option -> unit
 
+(** Posts cell to stream to be dealt with later, and returns a message
+    with whether the json was successfully parsed back to the client. *)
 let post_cell push req =
   let content = Body.to_string req.Request.body in
   let content_stream = Body.to_stream req.Request.body in
@@ -13,7 +15,7 @@ let post_cell push req =
         |> push |> Lwt.return)
   with
   | exception _ ->
-      Response.of_json (`Assoc [ ("status", `String "Uhhh ohhhh") ])
+      Response.of_json (`Assoc [ ("status", `String "Failed") ])
       |> Response.add_header ("Access-Control-Allow-Origin", "*")
       |> Lwt.return
   | _ ->
@@ -21,9 +23,8 @@ let post_cell push req =
       |> Response.add_header ("Access-Control-Allow-Origin", "*")
       |> Lwt.return
 
+(** Parses the get request and returns the correct json. *)
 let parse_get req = Controller.get_json
-(* Later this might parse different types of get requests, but for now
-   it just gets the current json of the world. *)
 
 let get req =
   Response.of_json (parse_get req)
