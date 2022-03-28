@@ -83,7 +83,45 @@ let get_nation = function
   | None -> -1
 
 let get_coordinate cell = (cell.x, cell.y)
-let simulate world = ()
+
+let doAction lref =
+  ()
+  
+let simulate world =
+  match !(world.lifes) with
+  | [] -> raise (InvalidWorldOperation (-1, -1))
+  | lref :: t -> begin
+      let life = !lref in
+      try
+        let x = life.x in
+        let y = life.y in
+        lref :=
+          {
+            life with
+            brain =
+              Brain.eval life.brain
+                (List.map
+                   (fun (xoff, yoff) ->
+                     !(Hashtbl.find world.cells
+                         (to_index world (x + xoff) (y + yoff)))
+                       .energy)
+                   [
+                     (0, 1);
+                     (0, -1);
+                     (1, 1);
+                     (1, 0);
+                     (1, -1);
+                     (-1, 1);
+                     (-1, 0);
+                     (-1, -1);
+                   ]);
+          };
+          doAction lref;
+        world.lifes := t @ [ lref ]
+      with
+      | Not_found -> raise (InvalidWorldOperation (life.x, life.y))
+    end
+
 let clear_cell world x y = ()
 let inject_cell world x y nation = ()
 let set_cell world x y life = failwith "TODO"
@@ -98,3 +136,5 @@ let cell_to_json (l : life option) =
           ("nation", `Int x.nation);
           ("energy", `Float x.energy);
         ]
+
+      
