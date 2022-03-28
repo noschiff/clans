@@ -39,3 +39,8 @@ let update_cell state x y cell : state =
 
   Improper call to server.render so I'm commenting it out for
   compilation reasons rn*)
+
+(** Edmund please make this somehow return the current state in a json,
+    without taking the world as a parameter because I won't have access
+    to it in main/server *)
+let get_json = `Assoc [ ("message", `String "Aite") ]

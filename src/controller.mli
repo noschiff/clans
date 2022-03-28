@@ -21,3 +21,8 @@ val display_cell : state -> int -> int -> state
 val update_cell : state -> int -> int -> Model.life -> state
 (** [update_cell x y data] updates the cell at coordinates (x, y) with
     new cell data. *)
+
+val get_json : Yojson.Safe.t
+(** Represents the current state in json format. Called during get
+    requests. Ideally, the state would somehow be mutable so it doesn't
+    need parameters for this function. *)
