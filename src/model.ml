@@ -1,17 +1,17 @@
 exception InvalidWorldOperation of int * int
 
 type life = {
-  x : int;
-  y : int;
-  nation : int;
-  energy : float;
-  brain : Brain.t;
+  mutable x : int;
+  mutable y : int;
+  mutable nation : int;
+  mutable energy : float;
+  mutable brain : Brain.t;
 }
 (** RI: 0 ≤ x ≤ world width, 0 ≤ y ≤ world height, energy ≥ 0*)
 
 type world = {
   cells : (int, life ref) Hashtbl.t;
-  lifes : life ref list ref;
+  mutable lifes : life ref list;
   dim_x : int;
   dim_y : int;
 }
@@ -25,12 +25,7 @@ let to_index world x y =
   pos_mod x world.dim_x + (pos_mod y world.dim_y * world.dim_x)
 
 let new_world dim_x dim_y : world =
-  {
-    cells = Hashtbl.create (dim_x * dim_y);
-    lifes = ref [];
-    dim_x;
-    dim_y;
-  }
+  { cells = Hashtbl.create (dim_x * dim_y); lifes = []; dim_x; dim_y }
 
 let load_world cells = failwith "unimplemented"
 
@@ -77,7 +72,7 @@ let generate_random_life (world : world) x y =
             }
         in
         Hashtbl.add world.cells index life;
-        world.lifes := life :: !(world.lifes)
+        world.lifes <- world.lifes @ [ life ]
     | _ -> raise (InvalidWorldOperation (x, y))
 
 let get_cell world x y = None
@@ -91,36 +86,33 @@ let get_coordinate cell = (cell.x, cell.y)
 let doAction lref = ()
 
 let simulate world =
-  match !(world.lifes) with
+  match world.lifes with
   | [] -> raise (InvalidWorldOperation (-1, -1))
   | lref :: t -> begin
       let life = !lref in
       try
         let x = life.x in
         let y = life.y in
-        lref :=
-          {
-            life with
-            brain =
-              Brain.eval life.brain
-                (List.map
-                   (fun (xoff, yoff) ->
-                     !(Hashtbl.find world.cells
-                         (to_index world (x + xoff) (y + yoff)))
-                       .energy)
-                   [
-                     (0, 1);
-                     (0, -1);
-                     (1, 1);
-                     (1, 0);
-                     (1, -1);
-                     (-1, 1);
-                     (-1, 0);
-                     (-1, -1);
-                   ]);
-          };
+        !lref.brain <-
+          Brain.eval life.brain
+            (List.map
+               (fun (xoff, yoff) ->
+                 !(Hashtbl.find world.cells
+                     (to_index world (x + xoff) (y + yoff)))
+                   .energy)
+               [
+                 (0, 1);
+                 (0, -1);
+                 (1, 1);
+                 (1, 0);
+                 (1, -1);
+                 (-1, 1);
+                 (-1, 0);
+                 (-1, -1);
+               ]);
+
         doAction lref;
-        world.lifes := t @ [ lref ]
+        world.lifes <- t @ [ lref ]
       with
       | Not_found -> raise (InvalidWorldOperation (life.x, life.y))
     end
