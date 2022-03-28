@@ -17,7 +17,12 @@ type world = {
 }
 (** Mutable. RI: all elements in cells are in lifes and vice versa*)
 
-let to_index world x y = x + (y * world.dim_x)
+let pos_mod n divisor =
+  let x = n mod divisor in
+  if x < 0 then x + divisor else x
+
+let to_index world x y =
+  pos_mod x world.dim_x + (pos_mod y world.dim_y * world.dim_x)
 
 let new_world dim_x dim_y : world =
   {
@@ -83,10 +88,8 @@ let get_nation = function
   | None -> -1
 
 let get_coordinate cell = (cell.x, cell.y)
+let doAction lref = ()
 
-let doAction lref =
-  ()
-  
 let simulate world =
   match !(world.lifes) with
   | [] -> raise (InvalidWorldOperation (-1, -1))
@@ -116,7 +119,7 @@ let simulate world =
                      (-1, -1);
                    ]);
           };
-          doAction lref;
+        doAction lref;
         world.lifes := t @ [ lref ]
       with
       | Not_found -> raise (InvalidWorldOperation (life.x, life.y))
@@ -136,5 +139,3 @@ let cell_to_json (l : life option) =
           ("nation", `Int x.nation);
           ("energy", `Float x.energy);
         ]
-
-      
