@@ -1,9 +1,6 @@
 type state = Model.world
 
-let init event_handler =
-  Server.init event_handler;
-  Model.new_world 100 100
-
+let init event_handler = Model.new_world 100 100
 let set_world state world = world
 
 let save_to_file filename state =
