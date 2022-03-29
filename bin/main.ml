@@ -20,24 +20,36 @@ let state =
   if debug then print_endline "Completed controller.init" else ();
   x
 
-let do_something_with_post_request (req, json, callback) : 'a Lwt.t =
-	let open Yojson.Safe.Util in
-  json |> to_assoc |> (fun x -> 
-  	match req with
-  	| "update_cell" -> json
-  		|> Model.cell_from_json
-  		|> (function 
-  		| Some l -> let asc = to_assoc json in
-	  		Controller.update_cell state (
-	  			List.assoc "x" asc |> to_int
-	  		) (
-	  			List.assoc "y" asc |> to_int
-	  		) l
-	  	| None -> ())
-  	| _ -> failwith "unimplemented"
-  );
+let handle_post_request (req, json, callback) : 'a Lwt.t =
+  let open Yojson.Safe.Util in
+  ( json |> to_assoc |> fun x ->
+    match req with
+    | "update_cell" -> begin
+        json |> Model.cell_from_json |> function
+        | Some l ->
+            let asc = to_assoc json in
+            Controller.update_cell state
+              (List.assoc "x" asc |> to_int)
+              (List.assoc "y" asc |> to_int)
+              l
+        | None -> ()
+      end
+    | "step" ->
+        let assoc = json |> to_assoc in
+        let full_world = List.assoc "full" assoc |> to_bool in
+        let steps = List.assoc "steps" assoc |> to_int in
+        let rec call_step n =
+          if n > 0 then begin
+            Controller.step state;
+            call_step (n - 1)
+          end
+          else Controller.get_json full_world state
+        in
+        ignore @@ call_step steps;
+        ()
+    | _ -> failwith "unimplemented" );
   state
-  |> Controller.get_json false
+  |> Controller.get_json true
   |> Lwt.wakeup_later callback
   |> Lwt.return
 (* Function that recieves the json from a post request, as of right now
@@ -46,9 +58,7 @@ let do_something_with_post_request (req, json, callback) : 'a Lwt.t =
 
 let rec post _ =
   if debug then print_endline "post called" else ();
-  Lwt.bind
-    (Lwt.bind (Lwt_stream.last_new s) do_something_with_post_request)
-    post
+  Lwt.bind (Lwt.bind (Lwt_stream.last_new s) handle_post_request) post
 
 let main =
   if debug then print_endline "main called" else ();

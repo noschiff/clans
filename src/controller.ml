@@ -4,7 +4,7 @@ let init w = ref w
 let set_world state world = state := world
 let get_world state = !state
 
-let get_json b state = 
+let get_json b state =
   `Assoc
     [
       ( "world",
@@ -14,9 +14,8 @@ let get_json b state =
                  `List (x |> List.map Model.cell_to_json))) );
     ]
 
-let save_to_file filename state = state
-  |> get_json true
-  |> Yojson.Safe.to_file filename
+let save_to_file filename state =
+  state |> get_json true |> Yojson.Safe.to_file filename
 
 let load_from_file state filename =
   let open Yojson.Safe.Util in
@@ -32,8 +31,10 @@ let display_cell state x y = ()
   To be implimented properly, but temprarily commented out so it
   compiles*)
 
-let update_cell state x y cell = Model.set_cell (get_world state) x y cell
+let update_cell state x y cell =
+  Model.set_cell (get_world state) x y cell
 
-let random_cell state x y = Model.generate_random_life (get_world state) x y
+let random_cell state x y =
+  Model.generate_random_life (get_world state) x y
 
 let step state = state |> get_world |> Model.simulate

@@ -206,7 +206,7 @@ let simulate world =
   | [] -> ()
   | lref :: t ->
       let life = !lref in
-      let (x, y) = get_coordinate world life in
+      let x, y = get_coordinate world life in
       life.brain <-
         Brain.eval life.brain
           (property_of_offsets world x y (fun l ->
@@ -237,8 +237,7 @@ let simulate world =
 let clear_cell world x y =
   let c = get_cell world x y in
   Hashtbl.remove world.cells (to_index world x y);
-  world.lifes <-
-    List.filter (fun l -> Some !l <> c) world.lifes
+  world.lifes <- List.filter (fun l -> Some !l <> c) world.lifes
 
 let inject_cell world x y nation =
   try
@@ -258,25 +257,24 @@ let cell_to_json l =
   match l with
   | None -> `Assoc [ ("type", `String "empty") ]
   | Some x ->
-    `Assoc
-      [
-        ("type", `String "life");
-        ("nation", `Float (100. *. x.nation));
-        ("energy", `Int x.energy);
-        ("brain", Brain.to_json x.brain);
-      ]
+      `Assoc
+        [
+          ("type", `String "life");
+          ("nation", `Float (100. *. x.nation));
+          ("energy", `Int x.energy);
+          ("brain", Brain.to_json x.brain);
+        ]
 
 let cell_from_json json =
   let open Yojson.Safe.Util in
-  json
-  |> to_assoc
-  |> (fun x ->
-    match List.assoc "type" x |> to_string with
-    | "empty" -> None
-    | "life" -> Some {
-      nation = List.assoc "nation" x |> to_float;
-      energy = List.assoc "energy" x |> to_int;
-      brain = List.assoc "brain" x |> Brain.from_json;
-    }
-    | _ -> raise (Invalid_argument "Invalid world JSON.")
-  )
+  json |> to_assoc |> fun x ->
+  match List.assoc "type" x |> to_string with
+  | "empty" -> None
+  | "life" ->
+      Some
+        {
+          nation = List.assoc "nation" x |> to_float;
+          energy = List.assoc "energy" x |> to_int;
+          brain = List.assoc "brain" x |> Brain.from_json;
+        }
+  | _ -> raise (Invalid_argument "Invalid world JSON.")
