@@ -62,7 +62,8 @@
         <button id="btnEditCell" type="button" class="btn btn-primary" disabled="true" data-bs-toggle="modal"
           data-bs-target="#modEditCell">Edit Cell</button>
         <hr />
-        <button id="myBtn" type="button" onclick="getInformation()" class="btn btn-success">Step Simulation</button>
+        <button id="myBtn" type="button" onclick="stepSimulation(1, false)" class="btn btn-success">Step
+          Simulation</button>
 
       </div>
       <div id="border" class="col">
@@ -101,19 +102,12 @@
         <div class="modal-body">
           <form>
             <div class="mb-3">
-              <label class="form-label">Type</label>
-              <select id="selCellType" class="form-select">
-                <option value="empty">Empty</option>
-                <option value="wall">Wall</option>
-                <option value="life">Life</option>
-              </select>
-              <div class="form-text">The type of cell that this is.</div>
-            </div>
-            <div class="mb-3">
-              <label for="lblCellNation" class="form-label">Nation</label>
-              <input class="form-control" id="txtCellNation">
+              <label for="lblCellEnergy" class="form-label">Energy</label>
+              <input class="form-control" id="txtCellEnergy" type="number">
+              <div class="form-text">The starting energy that this cell starts as</div>
             </div>
           </form>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

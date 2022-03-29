@@ -9,7 +9,7 @@ class World {
       var widthArray = new Array(width);
       for (let j = 0; j < width; j++) {
         widthArray[j] = new Cell(i, j
-          , "empty", null);
+          , "empty", 0);
       }
 
       this.cellArray[i] = widthArray;
