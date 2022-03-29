@@ -4,12 +4,66 @@ type life = {
   mutable x : int;
   mutable y : int;
   mutable nation : int;
-  mutable energy : float;
+  mutable energy : int;
   mutable brain : Brain.t;
 }
 (** RI: 0 ≤ x ≤ world width, 0 ≤ y ≤ world height, energy ≥ 0*)
 
+type params = {
+  action_threshold: float;
+  (** Threshold for hostility/docility/move action 
+      (Default 0.3)
+  
+      Requires: [0 <= action_threshold <= 1]**)
+  attack_damage: float;
+  (** Proportion of total energy that will be
+      used to attack.
+      (default 1)
+
+      Requires: [0 <= max_energy_prop]**)
+  attack_energy_retained: float;
+  (** Proportion of the attacked energy returned to
+      the attacker. Extra energy will be given to the 
+      energy bank.
+      (Default 0.5)
+
+      Requires: [0 <= attack_energy_retained <= 1]**)
+  energy_per_cell: int;
+  (** amount of energy given to the energy bank
+      as a linear function to the number of cells 
+      (default 5)
+
+      Requires: [0 <= energy_per_cell] **)
+  move_energy_consumption: int;
+  (** Amount of energy (constant) consumed on a move
+      action.
+      (default 1)
+
+    Requires: [0 <= move_energy_consumption] **)
+  reproduction_max_energy_use: float;
+  (** Maximum proportion of energy given to offspring
+      after reproduction. 
+      (default 0.5)
+
+      Requires: [0 <= reproduction_max_energy_use <= 1] **)
+  reproduction_energy_retention: float;
+  (** Amount of energy proportion retained and passed
+      to child upon reproduction. Rest of energy is
+      given to bank.
+      (default 0.9) 
+
+      Requires: [0 <= reproduction_energy_retention <= 1]**)
+  life_initial_energy: int;
+  (** Initial energy given to each life form.
+      This and energy_per_cell dictate how common
+      cells will be initially.
+      (default: 100)
+
+      Requires: [0 < life_initial_energy] **)
+}
+
 type world = {
+  params : params;
   cells : (int, life ref) Hashtbl.t;
   mutable lifes : life ref list;
   dim_x : int;
@@ -68,7 +122,7 @@ let generate_random_life (world : world) x y =
               y;
               brain = Brain.create 18 2 5 [ 10; 10; 5 ];
               nation = index;
-              energy = 100.;
+              energy = world.params.life_initial_energy;
             }
         in
         Hashtbl.add world.cells index life;
@@ -83,7 +137,27 @@ let get_nation = function
   | None -> -1
 
 let get_coordinate cell = (cell.x, cell.y)
-let doAction lref = ()
+
+let doAction world lref = 
+  let cutoff = function
+    | x when x > world.params.action_threshold -> Float.min 1. x
+    | x when x < -.world.params.action_threshold -> Float.max (-.1.) x
+    | _ -> 0.
+  in let extremify x = x /. Float.abs x
+  in let life = !lref in
+  Brain.out life
+  |> function
+    | [dx; dy; h] -> (
+      cutoff dx
+      |> extremify, 
+      cutoff dy
+      |> extremify,
+      cutoff h
+      |> function
+        | x when x < 0. -> extremify x
+        | x -> x
+    )
+    | _ -> failwith "Brain output did not match."
 
 let property_of_offsets world x y property =
   let offsets =
@@ -120,7 +194,7 @@ let simulate world =
           (property_of_offsets world x y (fun l -> l.energy)
           @ property_of_offsets world x y (fun l ->
                 l.nation |> float_of_int));
-      doAction lref;
+      doAction world lref;
       world.lifes <- t @ [ lref ]
 
 let clear_cell world x y =
