@@ -101,12 +101,6 @@ val clear_cell : world -> int -> int -> unit
 (** [set_cell x y] Clears the cell at the specified [x] and [y]
     coordinates. Does nothing if there is no cell at ([x],[y]) *)
 
-val inject_cell : world -> int -> int -> int -> unit
-(** [inject_cell x y] Sets the cell at the specified [x] and [y]
-    coordinates with the specified data. Pre-conditions: the coordinates
-    must be a valid range. Raises InvalidWorldOperation (x,y) if there
-    is no life at coordinates (x,y). *)
-
 val set_cell : world -> int -> int -> life -> unit
 (** [inject_cell x y] Sets the cell at the specified [x] and [y]
     coordinates with the specified data. Pre-conditions: the coordinates
@@ -120,7 +114,3 @@ val cell_to_json : life option -> Yojson.Safe.t
 val cell_from_json : Yojson.Safe.t -> life option
 (** [cell_from_json json] converts a json representation
     of a cell into a cell. **)
-
-val get_queue_nations : world -> float list
-(** [get_queue_nations w] lists the nations of the lifes in the order
-    that they are being simulated. useful for testing only*)

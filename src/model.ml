@@ -1,11 +1,14 @@
 exception InvalidWorldOperation of int * int
 
 type life = {
-  mutable nation : float;
+  id: int;
+  (** Unique identifier representing the cell's id.
+      Can be used to search for cells. **)
+  nation : float;
       (** Float from 0 to 1, representing the [rad / 2pi] along a circle
           of all possible nations. **)
-  mutable energy : int;
   mutable brain : Brain.t;
+  mutable energy : int;
 }
 (** RI: 0 ≤ x ≤ world width, 0 ≤ y ≤ world height, energy ≥ 0*)
 
@@ -54,8 +57,20 @@ type params = {
 
 type world = {
   params : params;
-  cells : (int, life ref) Hashtbl.t;
-  mutable lifes : life ref list;
+  cells : life option array array;
+  mutable steps : int;
+  (** Global number of steps taken **)
+  mutable counter : int;
+  (** Represents the id count **)
+  mutable queue : (int * int * int * int) list;
+  (** An element in this list is of the form
+      (x, y, id, s) where (x, y) is the position
+      of the cell and [id] is the id, and
+      [s] is the last step number on which this cell
+      acted. 
+
+      If the cell at the position does not match the
+      id, the element is equivalent to none. **)
   dim_x : int;
   dim_y : int;
 }
@@ -64,9 +79,6 @@ type world = {
 let pos_mod n divisor =
   let x = n mod divisor in
   if x < 0 then x + divisor else x
-
-let to_index world x y =
-  pos_mod x world.dim_x + (pos_mod y world.dim_y * world.dim_x)
 
 let default_params =
   {
@@ -82,8 +94,10 @@ let default_params =
 
 let new_world dim_x dim_y : world =
   {
-    cells = Hashtbl.create (dim_x * dim_y);
-    lifes = [];
+    cells = Array.make_matrix dim_x dim_y None;
+    steps = 0;
+    counter = 0;
+    queue = [];
     dim_x;
     dim_y;
     params = default_params;
@@ -91,50 +105,34 @@ let new_world dim_x dim_y : world =
 
 let load_world cells = failwith "unimplemented"
 
-let get_world world =
-  let rec by_col hashtbl counter max : life option list =
-    if counter = max then []
-    else
-      begin
-        (try Some !(Hashtbl.find hashtbl counter) with
-        | Not_found -> None)
-        :: by_col hashtbl (counter + 1) max
-      end
-  in
-  let rec by_row curr_row =
-    if curr_row >= world.dim_y then [ [] ]
-    else
-      let this =
-        let offset = curr_row * world.dim_x in
-        by_col world.cells offset (world.dim_x + offset)
-      in
-      let next = by_row (curr_row + 1) in
-      match next with
-      | [ [] ] -> [ this ]
-      | _ -> this :: next
-  in
-  by_row 0
+let get_world world = world.cells
+  |> Array.map Array.to_list
+  |> Array.to_list
 
-let generate_random_life (world : world) x y =
-  if x < 0 || x >= world.dim_x || y < 0 || y >= world.dim_y then
-    raise (InvalidWorldOperation (x, y))
-  else
-    let index = to_index world x y in
-    match Hashtbl.find world.cells index with
-    | exception Not_found ->
-        let life =
-          ref
-            {
-              brain = Brain.create 18 3 5 [ 10; 10; 5 ];
-              nation = Random.float 1.;
-              energy = world.params.life_initial_energy;
-            }
-        in
-        Hashtbl.add world.cells index life;
-        world.lifes <- world.lifes @ [ life ]
-    | _ -> raise (InvalidWorldOperation (x, y))
 
-let get_cell world x y = None
+let normalize world x y =
+  let modulo a b = ((a mod b) + b) mod b in
+  (modulo x world.dim_x, modulo y world.dim_y)
+
+let get_cell world x y = 
+  let (x, y) = normalize world x y in
+  world.cells.(x).(y)
+
+let generate_random_life world x y =
+  let (x, y) = normalize world x y in
+  match get_cell world x y with
+  | None ->
+      world.counter <- world.counter + 1; (* Increment cell id count *)
+      world.cells.(x).(y) <- Some
+        {
+          id = world.counter;
+          brain = Brain.create 18 3 5 [ 10; 10; 5 ];
+          nation = Random.float 1.;
+          energy = world.params.life_initial_energy;
+        };
+      world.queue <- world.queue @ [ (x, y, world.counter, world.steps) ]
+  | Some _ -> raise (InvalidWorldOperation (x, y))
+
 let get_size world = (world.dim_x, world.dim_y)
 
 let get_nation = function
@@ -143,24 +141,28 @@ let get_nation = function
 
 let get_coordinate world life = (0, 0)
 
-let calculate_brain_output world lref =
+let calculate_brain_output world life =
   let cutoff = function
     | x when x > world.params.action_threshold -> Float.min 1. x
     | x when x < -.world.params.action_threshold -> Float.max (-1.) x
     | _ -> 0.
   in
-  let extremify x = x /. Float.abs x in
-  let life = !lref in
+  let sign = function
+    | x when x > 0. -> 1.
+    | x when x < 0. -> -1.
+    | _ -> 0.
+  in
   Brain.out life.brain |> function
   | [ dx; dy; h ] -> (
-      ( cutoff dx |> extremify,
-        cutoff dy |> extremify,
+      ( cutoff dx |> sign |> int_of_float,
+        cutoff dy |> sign |> int_of_float,
         cutoff h |> function
-        | x when x < 0. -> extremify x
+        | x when x < 0. -> -1.
         | x -> x ))
   | _ -> failwith "Brain output did not match."
 
 let property_of_offsets world x y property =
+  let (x, y) = normalize world x y in
   let offsets =
     [
       (0, 0);
@@ -174,15 +176,12 @@ let property_of_offsets world x y property =
       (-1, -1);
     ]
   in
-  List.map
-    (fun (xoff, yoff) ->
-      try
-        property
-          !(Hashtbl.find world.cells
-              (to_index world (x + xoff) (y + yoff)))
-      with
-      | Not_found -> -1.) (* Default value per Brain *)
-    offsets
+  offsets
+  |> List.map (fun (xoff, yoff) ->
+    match get_cell world (x+xoff) (y+yoff) with
+    | Some x -> property x
+    | None -> -1.
+  )
 
 let attack life adj_life action_bias =
   let damage_dealt =
@@ -197,62 +196,68 @@ let attack life adj_life action_bias =
 
 let mate life adj_life action_bias adj_action_bias = ()
 
+let clear_cell world x y = world.cells.(x).(y) <- None
+
+let set_cell world x y life = world.cells.(x).(y) <- Some life
+
+let rec step world =
+  let act life x y =
+    let ringdist a b =
+      (a -. b +. 1. |> fun x -> Float.rem x 1.) |> fun x ->
+      if x < 0.5 then x else 1. -. x
+    in
+    life.brain <- Brain.eval life.brain
+      (property_of_offsets world x y (fun l ->
+           float_of_int l.energy /. float_of_int life.energy)
+      @ property_of_offsets world x y (fun l ->
+            ringdist l.nation life.nation));
+    let dx, dy, h = calculate_brain_output world life in
+    let nx, ny = x+dx, y+dy in
+    match get_cell world nx ny with
+      | None -> (* No cell here, just move *)
+        life.energy <- life.energy - world.params.move_energy_consumption;
+        (* only move if we have the energy to, otherwise die *)
+        if life.energy > 0 then set_cell world nx nx life;
+        clear_cell world x y
+      | Some lifeo -> (* Cell here, interact *)
+        let (_, _, ho) = calculate_brain_output world lifeo in
+        match (h, ho) with
+        | _ when h > 0. && ho > 0. -> () (* Mate *)
+        | (-1., _) -> (* attacking *)
+          let e, eo = life.energy, lifeo.energy in
+          let de = (* calculate attack value *)
+              float_of_int e *. world.params.attack_damage
+              |> Float.ceil
+              |> Float.min @@ float_of_int eo in
+          let gde = de *. world.params.attack_energy_retained in
+          life.energy <- e + int_of_float gde;
+          lifeo.energy <- e - int_of_float de;
+          if lifeo.energy <= 0
+          then clear_cell world nx ny;
+          (* Remove the cost of acting *)
+          life.energy <- life.energy - world.params.move_energy_consumption;
+        | _ -> () (* No interaction *)
+  in let rec pn = function
+    | [] -> []
+    | (x, y, id, s) :: t ->
+      match get_cell world x y with
+      | None -> pn t
+      | Some life -> if life.id = id
+        then (
+          act life x y;
+          t @ if life.energy > 0 then [ (x, y, id, world.steps) ] else []
+        ) else pn t
+  in 
+  world.queue <- pn world.queue
+
 let simulate world =
-  let ringdist a b =
-    (a -. b +. 1. |> fun x -> Float.rem x 1.) |> fun x ->
-    if x < 0.5 then x else 1. -. x
-  in
-  match world.lifes with
-  | [] -> ()
-  | lref :: t ->
-      let life = !lref in
-      let (x, y) = get_coordinate world life in
-      life.brain <-
-        Brain.eval life.brain
-          (property_of_offsets world x y (fun l ->
-               float_of_int l.energy /. float_of_int life.energy)
-          @ property_of_offsets world x y (fun l ->
-                ringdist l.nation life.nation));
-      let dx, dy, action_bias = calculate_brain_output world lref in
-      let new_x = (dx |> Float.round |> int_of_float) + x in
-      let new_y = (dy |> Float.round |> int_of_float) + y in
-      begin
-        try
-          let adj_lref =
-            Hashtbl.find world.cells (to_index world new_x new_y)
-          in
-          let adj_life = !adj_lref in
-          let _, _, adj_action_bias =
-            calculate_brain_output world adj_lref
-          in
-          if action_bias < 0. then attack life adj_life action_bias
-          else if action_bias > 0. then
-            mate life adj_life action_bias adj_action_bias
-          else ()
-        with
-        | Not_found -> ()
-      end;
-      world.lifes <- t @ [ lref ]
-
-let clear_cell world x y =
-  let c = get_cell world x y in
-  Hashtbl.remove world.cells (to_index world x y);
-  world.lifes <-
-    List.filter (fun l -> Some !l <> c) world.lifes
-
-let inject_cell world x y nation =
-  try
-    !(Hashtbl.find world.cells (to_index world x y)).nation <-
-      float_of_int nation /. 100.
-  with
-  | Not_found -> raise (InvalidWorldOperation (x, y))
-
-let set_cell world x y life =
-  try Hashtbl.find world.cells (to_index world x y) := life with
-  | Not_found -> raise (InvalidWorldOperation (x, y))
-
-let get_queue_nations world =
-  List.map (fun x -> Some !x |> get_nation) world.lifes
+  world.steps <- world.steps + 1;
+  let rec rstep _ = 
+    match world.queue with
+    | [] -> ()
+    | (_, _, id, s) :: _ when s < world.steps -> ()
+    | (_, _, oid, _) :: _ -> step world; rstep ()
+  in rstep ()
 
 let cell_to_json l =
   match l with
@@ -274,6 +279,7 @@ let cell_from_json json =
     match List.assoc "type" x |> to_string with
     | "empty" -> None
     | "life" -> Some {
+      id = List.assoc "id" x |> to_int;
       nation = List.assoc "nation" x |> to_float;
       energy = List.assoc "energy" x |> to_int;
       brain = List.assoc "brain" x |> Brain.from_json;
