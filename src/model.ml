@@ -141,7 +141,7 @@ let get_nation = function
   | Some life -> 100. *. life.nation
   | None -> -1.
 
-let get_coordinate cell = failwith "unimplemented"
+let get_coordinate world life = (1,1)
 
 let calculate_brain_output world lref =
   let cutoff = function
@@ -205,7 +205,7 @@ let simulate world =
   | [] -> ()
   | lref :: t ->
       let life = !lref in
-      let (x, y) = get_coordinate life in
+      let (x, y) = get_coordinate world life in
       life.brain <-
         Brain.eval life.brain
           (property_of_offsets world x y (fun l ->
