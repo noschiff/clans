@@ -9,16 +9,26 @@ let s, p =
   if debug then print_endline "Created stream and push function" else ();
   a
 
-let original_state =
+let state =
   if debug then print_endline "Called controller.init" else ();
-  let x = Controller.init p in
+  let x = Controller.init @@ Model.new_world 100 100 in
   if debug then print_endline "Completed controller.init" else ();
   x
 
-let do_something_with_post_request (json : Yojson.Safe.t) : 'a Lwt.t =
+let do_something_with_post_request (req, json) : 'a Lwt.t =
 	let open Yojson.Safe.Util in
   json |> to_assoc |> (fun x -> 
-  	match List.assoc "type" x with
+  	match req with
+  	| "set_cell" -> json
+  		|> Model.cell_from_json
+  		|> (function 
+  		| Some l -> let asc = to_assoc json in
+	  		Controller.update_cell state (
+	  			List.assoc "x" asc |> to_int
+	  		) (
+	  			List.assoc "y" asc |> to_int
+	  		) l
+	  	| None -> ())
   	| _ -> failwith "unimplemented"
   ) |> Lwt.return
 (* Function that recieves the json from a post request, as of right now
