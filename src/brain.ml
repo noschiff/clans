@@ -52,14 +52,13 @@ let create i o m l =
 
   (* BROKEN :( *)
 let eval brain inp = 
-	(* let rec e i r = match (Array.length brain.weights - i) with
+	let rec e i r = match (Array.length brain.weights - i) with
 		| 0 -> r
 		| _ -> Matrix.dot r brain.weights.(i)
 			|> Matrix.plus brain.biases.(i)
 			|> e (i+1)
-	in Array.append (Array.of_list inp) brain.mem
-		|> Array.to_list
-		|> (fun x -> Matrix.of_list [x])
+	in inp @ Array.to_list brain.mem
+		|> (fun x -> Matrix.of_list [x]) (**1xn matrix **)
 		|> e 0
 		|> Matrix.row 0
 		|> Array.of_list
@@ -67,7 +66,7 @@ let eval brain inp =
 			brain with
 			out = Array.sub x 0 (Array.length brain.out);
 			mem =  Array.sub x (Array.length brain.out) (Array.length brain.mem)
-		}) *) brain
+		})
 	
 
 let out brain = Array.to_list brain.out

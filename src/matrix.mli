@@ -10,6 +10,10 @@ val of_list : float list list -> t
 		Requires that the list of lists represents
 		a matrix. *)
 
+val dims : t -> int * int
+(** [dims m] is the dimensions of [m] in
+		(rows, columns) form. **)
+
 val rows : t -> int
 (** [rows m] returns the number of rows of [m]. *)
 

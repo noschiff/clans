@@ -145,7 +145,7 @@ let doAction world lref =
     | _ -> 0.
   in let extremify x = x /. Float.abs x
   in let life = !lref in
-  Brain.out life
+  Brain.out life.brain
   |> function
     | [dx; dy; h] -> (
       cutoff dx
@@ -191,7 +191,7 @@ let simulate world =
       let y = life.y in
       life.brain <-
         Brain.eval life.brain
-          (property_of_offsets world x y (fun l -> l.energy)
+          (property_of_offsets world x y (fun l -> float_of_int l.energy)
           @ property_of_offsets world x y (fun l ->
                 l.nation |> float_of_int));
       doAction world lref;
