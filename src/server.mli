@@ -1,5 +1,7 @@
-type t
-(** A type representing the server*)
 
-val init : ((string * Yojson.Safe.t) option -> unit) -> unit
-(** [init p] creates a server with a stream's push function p. *)
+
+val init : ((string * Yojson.Safe.t * Yojson.Safe.t Lwt.u) option -> unit) -> unit
+(** [init p] creates a server with a stream's push function [p]. 
+		[p] represents an [Lwt_stream] that takes
+		a [string] request type, [Yojson.Safe.t] data,
+		and has a return promise to be fulfilled.*)

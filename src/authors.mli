@@ -21,3 +21,6 @@
 
 val ms1_hours_worked : int
 (** [ms1_hours_worked] is the number of hours worked on MS1. *)
+
+val ms2_hours_worked : int
+(** [ms2_hours_worked] is the number of hours worked on MS2. *)

@@ -15,11 +15,11 @@ let state =
   if debug then print_endline "Completed controller.init" else ();
   x
 
-let do_something_with_post_request (req, json) : 'a Lwt.t =
+let do_something_with_post_request (req, json, callback) : 'a Lwt.t =
 	let open Yojson.Safe.Util in
   json |> to_assoc |> (fun x -> 
   	match req with
-  	| "set_cell" -> json
+  	| "update_cell" -> json
   		|> Model.cell_from_json
   		|> (function 
   		| Some l -> let asc = to_assoc json in
@@ -30,7 +30,11 @@ let do_something_with_post_request (req, json) : 'a Lwt.t =
 	  		) l
 	  	| None -> ())
   	| _ -> failwith "unimplemented"
-  ) |> Lwt.return
+  );
+  state
+  |> Controller.get_json
+  |> Lwt.wakeup_later callback
+  |> Lwt.return
 (* Function that recieves the json from a post request, as of right now
    just prints it to the console. The type signature should not be
    changed. The returned value is not used. *)
