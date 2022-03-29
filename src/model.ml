@@ -78,8 +78,19 @@ let pos_mod n divisor =
 let to_index world x y =
   pos_mod x world.dim_x + (pos_mod y world.dim_y * world.dim_x)
 
+let default_params = {
+  action_threshold = 0.3;
+  attack_damage = 1.;
+  attack_energy_retained = 0.5;
+  energy_per_cell = 1;
+  move_energy_consumption = 1;
+  reproduction_max_energy_use = 0.5;
+  reproduction_energy_retention = 0.9;
+  life_initial_energy = 100;
+}
+
 let new_world dim_x dim_y : world =
-  { cells = Hashtbl.create (dim_x * dim_y); lifes = []; dim_x; dim_y }
+  { cells = Hashtbl.create (dim_x * dim_y); lifes = []; dim_x; dim_y ; params = default_params}
 
 let load_world cells = failwith "unimplemented"
 
