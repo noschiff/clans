@@ -263,13 +263,13 @@ let cell_to_json l =
   match l with
   | None -> `Assoc [ ("type", `String "empty") ]
   | Some x ->
-    `Assoc
-      [
-        ("type", `String "life");
-        ("nation", `Float (100. *. x.nation));
-        ("energy", `Int x.energy);
-        ("brain", Brain.to_json x.brain);
-      ]
+      `Assoc
+        [
+          ("type", `String "life");
+          ("nation", `Float (100. *. x.nation));
+          ("energy", `Int x.energy);
+          ("brain", Brain.to_json x.brain);
+        ]
 
 let cell_from_json json =
   let open Yojson.Safe.Util in

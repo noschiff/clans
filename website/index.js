@@ -206,9 +206,9 @@ function openWorldFile() {
  * This is used for when needing to get the world upon loading the view.
  */
 function stepSimulation(stepCount, fullWorld) {
-  fetch('http://localhost:3000/step/', {
+  fetch('http://localhost:3000/step', {
     method: 'POST',
-    body: JSON.stringify ({
+    body: JSON.stringify({
       full: fullWorld,
       steps: stepCount
     })
@@ -220,8 +220,8 @@ function stepSimulation(stepCount, fullWorld) {
     throw new Error("Not OK");
   }).then(data => alert("Successful step:" + JSON.stringify(data)))
     .catch(reason => {
-    alert("Could not get info from http://localhost:3000/step. Error: " + reason)
-  });
+      alert("Could not get info from http://localhost:3000/step. Error: " + reason)
+    });
 }
 
 function postCellInformation(data) {

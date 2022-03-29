@@ -18,8 +18,8 @@ val display_cell : state -> int -> int -> unit
     siebar *)
 
 val update_cell : state -> int -> int -> Model.life -> unit
-(** [update_cell x y data] updates the cell at coordinates ([x], [y]) with
-    new cell [data]. *)
+(** [update_cell x y data] updates the cell at coordinates ([x], [y])
+    with new cell [data]. *)
 
 val random_cell : state -> int -> int -> unit
 (** [random_cell x y] inserts a random cell at ([x], [y]) *)

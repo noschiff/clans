@@ -12,60 +12,50 @@ type life
     world*)
 
 type params = {
-  action_threshold: float;
-  (** Threshold for hostility/docility/move action 
-      (Default 0.3)
-  
-      Requires: [0 <= action_threshold <= 1]**)
-  attack_damage: float;
-  (** Proportion of total energy that will be
-      used to attack.
-      (default 1)
+  action_threshold : float;
+      (** Threshold for hostility/docility/move action (Default 0.3)
 
-      Requires: [0 <= max_energy_prop]**)
-  attack_energy_retained: float;
-  (** Proportion of the attacked energy returned to
-      the attacker. Extra energy will be given to the 
-      energy bank.
-      (Default 0.5)
+          Requires: [0 <= action_threshold <= 1]**)
+  attack_damage : float;
+      (** Proportion of total energy that will be used to attack.
+          (default 1)
 
-      Requires: [0 <= attack_energy_retained <= 1]**)
-  energy_per_cell: int;
-  (** amount of energy given to the energy bank
-      as a linear function to the number of cells 
-      (default 5)
+          Requires: [0 <= max_energy_prop]**)
+  attack_energy_retained : float;
+      (** Proportion of the attacked energy returned to the attacker.
+          Extra energy will be given to the energy bank. (Default 0.5)
 
-      Requires: [0 <= energy_per_cell] **)
-  move_energy_consumption: int;
-  (** Amount of energy (constant) consumed on a move
-      action.
-      (default 1)
+          Requires: [0 <= attack_energy_retained <= 1]**)
+  energy_per_cell : int;
+      (** amount of energy given to the energy bank as a linear function
+          to the number of cells (default 5)
 
-    Requires: [0 <= move_energy_consumption] **)
-  reproduction_max_energy_use: float;
-  (** Maximum proportion of energy given to offspring
-      after reproduction. 
-      (default 0.5)
+          Requires: [0 <= energy_per_cell] **)
+  move_energy_consumption : int;
+      (** Amount of energy (constant) consumed on a move action.
+          (default 1)
 
-      Requires: [0 <= reproduction_max_energy_use <= 1] **)
-  reproduction_energy_retention: float;
-  (** Amount of energy proportion retained and passed
-      to child upon reproduction. Rest of energy is
-      given to bank.
-      (default 0.9) 
+          Requires: [0 <= move_energy_consumption] **)
+  reproduction_max_energy_use : float;
+      (** Maximum proportion of energy given to offspring after
+          reproduction. (default 0.5)
 
-      Requires: [0 <= reproduction_energy_retention <= 1]**)
-  life_initial_energy: int;
-  (** Initial energy given to each life form.
-      This and energy_per_cell dictate how common
-      cells will be initially.
-      (default: 100)
+          Requires: [0 <= reproduction_max_energy_use <= 1] **)
+  reproduction_energy_retention : float;
+      (** Amount of energy proportion retained and passed to child upon
+          reproduction. Rest of energy is given to bank. (default 0.9)
 
-      Requires: [0 < life_initial_energy] **)
+          Requires: [0 <= reproduction_energy_retention <= 1]**)
+  life_initial_energy : int;
+      (** Initial energy given to each life form. This and
+          energy_per_cell dictate how common cells will be initially.
+          (default: 100)
+
+          Requires: [0 < life_initial_energy] **)
 }
 (** Type representing all parameters. **)
 
-val default_params: params
+val default_params : params
 (** The default set of parameters. **)
 
 val new_world : int -> int -> world
