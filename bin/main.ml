@@ -20,7 +20,7 @@ let do_something_with_post_request (req, json) : 'a Lwt.t =
   json |> to_assoc
   |> (fun x ->
        match req with
-       | "set_cell" -> (
+       | "update_cell" -> begin
            json |> Model.cell_from_json |> function
            | Some l ->
                let asc = to_assoc json in
@@ -28,7 +28,8 @@ let do_something_with_post_request (req, json) : 'a Lwt.t =
                  (List.assoc "x" asc |> to_int)
                  (List.assoc "y" asc |> to_int)
                  l
-           | None -> ())
+           | None -> ()
+         end
        | _ -> failwith "unimplemented")
   |> Lwt.return
 (* Function that recieves the json from a post request, as of right now

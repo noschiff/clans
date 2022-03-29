@@ -42,3 +42,7 @@ let update_cell state x y cell = Model.set_cell !state x y cell
     in a json, without taking the world as a parameter because I won't
     have access to it in main/server *)
 let get_json state = failwith "unimplemented"
+
+(** Another function that I need and don't have access to the current
+    world*)
+let step = failwith "Unimplimented"
