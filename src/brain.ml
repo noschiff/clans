@@ -12,7 +12,7 @@ let normal () =
   sqrt (-2. *. log x) *. cos (2. *. Float.pi *. y)
 
 (** Creates an mxn matrix with normal random dostributed numbers *)
-let normal_matrix m n =
+let normal_matrix n m =
   let rec g = function
     | 0 -> []
     | a -> normal () :: g (a - 1)
@@ -28,22 +28,22 @@ let create i o m l =
   {
     weights =
       (let rec f a b l =
-         normal_matrix a b
-         ::
-         (match l with
-         | [] -> []
-         | c :: l2 -> f b c l2)
-       in
-       ls
-       |> (function
-            | a :: b :: l -> f a b l
-            | _ -> failwith "impossible")
-       |> Array.of_list);
+        normal_matrix a b
+        ::
+        (match l with
+        | [] -> []
+        | c :: l2 -> f b c l2)
+      in
+      ls
+      |> (function
+        | a :: b :: l -> f a b l
+        | _ -> failwith "impossible")
+      |> Array.of_list);
     biases =
       ls
       |> (function
-           | a :: b -> b
-           | _ -> failwith "impossible")
+        | a :: b -> b
+        | _ -> failwith "impossible")
       |> List.map (fun x -> normal_matrix 1 x)
       |> Array.of_list;
     mem = Array.make m 0.;

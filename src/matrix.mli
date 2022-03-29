@@ -1,7 +1,7 @@
 type t
 
 val create : int -> int -> t
-(** [create m n] creates an mxn matrix of 0s. *)
+(** [create n m] creates an nxm matrix of 0s. *)
 
 val of_list : float list list -> t
 (** [from_list l] creates a matrix from a 

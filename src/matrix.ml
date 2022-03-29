@@ -1,6 +1,6 @@
 type t = float array array
 
-let create m n = Array.make_matrix m n 0.
+let create n m = Array.make_matrix n m 0.
 
 let of_list l = l
 	|> List.map Array.of_list
@@ -28,16 +28,18 @@ let col i a = a
 let get i j a = a.(i).(j)
 
 let transpose a =
+	let colc = cols a in
 	let rec f i = match i with
 		| 0 -> []
-		| _ -> (col i a |> Array.of_list) :: f (i-1)
-	in f @@ cols a
-	|> Array.of_list
+		| _ -> col (colc-i) a :: f (i-1)
+	in f colc
+	|> of_list(* 
 	|> (fun x ->
 		assert (rows x = cols a);
-		assert (cols x = rows a); x)
+		assert (cols x = rows a); x) *)
 
 let dot a b =
+	(* Printf.printf "Dotting %dx%d and %dx%d" (rows a) (cols a) (rows b) (cols b); *)
 	assert (cols a = rows b);
 	let bt = transpose b in
 	a |> Array.map (fun r -> 

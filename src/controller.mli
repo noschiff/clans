@@ -18,8 +18,11 @@ val display_cell : state -> int -> int -> unit
     siebar *)
 
 val update_cell : state -> int -> int -> Model.life -> unit
-(** [update_cell x y data] updates the cell at coordinates (x, y) with
-    new cell data. *)
+(** [update_cell x y data] updates the cell at coordinates ([x], [y]) with
+    new cell [data]. *)
+
+val random_cell : state -> int -> int -> unit
+(** [random_cell x y] inserts a random cell at ([x], [y]) *)
 
 val get_json : bool -> state -> Yojson.Safe.t
 (** [get_json full_world] returns the full world, or just the changes to

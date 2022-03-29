@@ -80,8 +80,8 @@ val get_world : world -> life option list list
     [j]'th element of the list is equivalent [to get_cell i j]. *)
 
 val generate_random_life : world -> int -> int -> unit
-(** [generate_random_life nation] returns a new life form with specific
-    attributes*)
+(** [generate_random_life world x y] inserts a new life form with random
+    attributes at ([x], [y])*)
 
 val get_cell : world -> int -> int -> life option
 (** [get_cell x y] Returns the cell at the specified [x] and [y].

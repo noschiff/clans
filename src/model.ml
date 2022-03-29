@@ -141,7 +141,7 @@ let get_nation = function
   | Some life -> 100. *. life.nation
   | None -> -1.
 
-let get_coordinate cell = failwith "unimplemented"
+let get_coordinate cell = (0, 0)
 
 let calculate_brain_output world lref =
   let cutoff = function
@@ -163,6 +163,7 @@ let calculate_brain_output world lref =
 let property_of_offsets world x y property =
   let offsets =
     [
+      (0, 0);
       (0, 1);
       (0, -1);
       (1, 1);
