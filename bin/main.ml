@@ -1,10 +1,5 @@
 open Clans
 
-(** TODO: I (Ari) will move the handling of post requets to server.ml
-    shortly. Nothing should be calling them besides what I write and the
-    functionality should be the same, but that's why there's clutter in
-    main. *)
-
 let debug = false
 
 let s, p =
@@ -52,9 +47,6 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
   |> Controller.get_json true
   |> Lwt.wakeup_later callback
   |> Lwt.return
-(* Function that recieves the json from a post request, as of right now
-   just prints it to the console. The type signature should not be
-   changed. The returned value is not used. *)
 
 let rec post _ =
   if debug then print_endline "post called" else ();
