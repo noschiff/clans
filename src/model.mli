@@ -99,5 +99,5 @@ val cell_to_json : life option -> Yojson.Safe.t
     representation *)
 
 val cell_from_json : Yojson.Safe.t -> life option
-(** [cell_from_json json] converts a json representation
-    of a cell into a cell. **)
+(** [cell_from_json json] converts a json representation of a cell into
+    a cell. **)
