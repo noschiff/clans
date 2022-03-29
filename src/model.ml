@@ -133,7 +133,7 @@ let generate_random_life (world : world) x y =
             {
               x;
               y;
-              brain = Brain.create 18 2 5 [ 10; 10; 5 ];
+              brain = Brain.create 18 3 5 [ 10; 10; 5 ];
               nation = Random.float 1.;
               energy = world.params.life_initial_energy;
             }
@@ -240,4 +240,24 @@ let cell_to_json l =
         ("type", `String "life");
         ("nation", `Float (100. *. x.nation));
         ("energy", `Int x.energy);
+        ("x", `Int x.x);
+        ("y", `Int x.y);
+        ("brain", Brain.to_json x.brain);
       ]
+
+let cell_from_json json =
+  let open Yojson.Safe.Util in
+  json
+  |> to_assoc
+  |> (fun x ->
+    match List.assoc "type" x |> to_string with
+    | "empty" -> None
+    | "life" -> Some {
+      nation = List.assoc "nation" x |> to_float;
+      energy = List.assoc "energy" x |> to_int;
+      x = List.assoc "x" x |> to_int;
+      y = List.assoc "y" x |> to_int;
+      brain = List.assoc "brain" x |> Brain.from_json;
+    }
+    | _ -> raise (Invalid_argument "Invalid world JSON.")
+  )

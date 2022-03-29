@@ -72,7 +72,7 @@ val new_world : int -> int -> world
 (** [new_world dimx dimy] instantiates and returns a new world with no
     cells*)
 
-val load_world : life list list -> world
+val load_world : life option list list -> world
 (** [load_world cells] returns a world from a list of cells*)
 
 val get_world : world -> life option list list
@@ -113,9 +113,13 @@ val set_cell : world -> int -> int -> life -> unit
     must be a valid range. Raises InvalidWorldOperation (x,y) if there
     is no life at coordinates (x,y). *)
 
-val cell_to_json : life option -> Yojson.Basic.t
+val cell_to_json : life option -> Yojson.Safe.t
 (** [cell_to_json cell] converts a cell [cell] into its json
     representation *)
+
+val cell_from_json : Yojson.Safe.t -> life option
+(** [cell_from_json json] converts a json representation
+    of a cell into a cell. **)
 
 val get_queue_nations : world -> float list
 (** [get_queue_nations w] lists the nations of the lifes in the order

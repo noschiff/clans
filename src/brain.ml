@@ -50,7 +50,10 @@ let create i o m l =
     out = Array.make o 0.;
   }
 
-  (* BROKEN :( *)
+let to_json = failwith "sus"
+
+let from_json = failwith "sus"
+
 let eval brain inp = 
 	let rec e i r = match (Array.length brain.weights - i) with
 		| 0 -> r
