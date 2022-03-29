@@ -90,7 +90,7 @@ val get_cell : world -> int -> int -> life option
 val get_size : world -> int * int
 (** [get_size world] returns the size (length,width) of [world] *)
 
-val get_nation : life option -> int
+val get_nation : life option -> float
 (** [get_nation cell] returns the nation of [cell] *)
 
 val simulate : world -> unit
@@ -117,6 +117,6 @@ val cell_to_json : life option -> Yojson.Basic.t
 (** [cell_to_json cell] converts a cell [cell] into its json
     representation *)
 
-val get_queue_nations : world -> int list
+val get_queue_nations : world -> float list
 (** [get_queue_nations w] lists the nations of the lifes in the order
     that they are being simulated. useful for testing only*)

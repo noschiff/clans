@@ -3,7 +3,9 @@ exception InvalidWorldOperation of int * int
 type life = {
   mutable x : int;
   mutable y : int;
-  mutable nation : int;
+  mutable nation : float;
+  (** Float from 0 to 1, representing the [rad / 2pi] along a circle of 
+      all possible nations. **)
   mutable energy : int;
   mutable brain : Brain.t;
 }
@@ -132,7 +134,7 @@ let generate_random_life (world : world) x y =
               x;
               y;
               brain = Brain.create 18 2 5 [ 10; 10; 5 ];
-              nation = index;
+              nation = Random.float 1.;
               energy = world.params.life_initial_energy;
             }
         in
@@ -144,15 +146,15 @@ let get_cell world x y = None
 let get_size world = (world.dim_x, world.dim_y)
 
 let get_nation = function
-  | Some life -> life.nation
-  | None -> -1
+  | Some life -> 100. *. life.nation
+  | None -> -1.
 
 let get_coordinate cell = (cell.x, cell.y)
 
 let doAction world lref = 
   let cutoff = function
     | x when x > world.params.action_threshold -> Float.min 1. x
-    | x when x < -.world.params.action_threshold -> Float.max (-.1.) x
+    | x when x < -.world.params.action_threshold -> Float.max (-1.) x
     | _ -> 0.
   in let extremify x = x /. Float.abs x
   in let life = !lref in
@@ -191,11 +193,15 @@ let property_of_offsets world x y property =
           !(Hashtbl.find world.cells
               (to_index world (x + xoff) (y + yoff)))
       with
-      | Not_found -> 0.0) (* Default value per Brain *)
+      | Not_found -> -1.) (* Default value per Brain *)
     offsets
 
 let simulate world =
-  match world.lifes with
+  let ringdist a b = 
+    a -. b +. 1.
+    |> (fun x -> Float.rem x 1.)
+    |> (fun x -> if x < 0.5 then x else 1. -. x)
+  in match world.lifes with
   | [] -> ()
   | lref :: t ->
       let life = !lref in
@@ -203,9 +209,8 @@ let simulate world =
       let y = life.y in
       life.brain <-
         Brain.eval life.brain
-          (property_of_offsets world x y (fun l -> float_of_int l.energy)
-          @ property_of_offsets world x y (fun l ->
-                l.nation |> float_of_int));
+          (property_of_offsets world x y (fun l -> float_of_int l.energy /. float_of_int life.energy)
+          @ property_of_offsets world x y (fun l -> ringdist l.nation life.nation));
       doAction world lref;
       world.lifes <- t @ [ lref ]
 
@@ -216,7 +221,7 @@ let clear_cell world x y =
 
 let inject_cell world x y nation =
   try
-    !(Hashtbl.find world.cells (to_index world x y)).nation <- nation
+    !(Hashtbl.find world.cells (to_index world x y)).nation <- float_of_int nation /. 100.
   with
   | Not_found -> raise (InvalidWorldOperation (x, y))
 
@@ -224,7 +229,7 @@ let set_cell world x y life =
   try Hashtbl.find world.cells (to_index world x y) := life with
   | Not_found -> raise (InvalidWorldOperation (x, y))
 
-let get_queue_nations world = List.map (fun x -> !x.nation) world.lifes
+let get_queue_nations world = List.map (fun x -> Some !x |> get_nation) world.lifes
 
 let cell_to_json l =
   match l with
@@ -233,6 +238,6 @@ let cell_to_json l =
     `Assoc
       [
         ("type", `String "life");
-        ("nation", `Int x.nation);
+        ("nation", `Float (100. *. x.nation));
         ("energy", `Int x.energy);
       ]
