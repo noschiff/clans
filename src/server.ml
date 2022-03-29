@@ -5,30 +5,32 @@ type t = (string * Yojson.Safe.t * Yojson.Safe.t Lwt.u) option -> unit
 (** Posts cell to stream to be dealt with later, and returns a message
     with whether the json was successfully parsed back to the client. *)
 let post name (push : t) req =
+  Printf.printf "Recieve post %s\n" name;
   let content = Body.to_string req.Request.body in
   let respond x =
+    (* Printf.printf "Responding with %s\n" (Yojson.Safe.show x); *)
     x |> Response.of_json
     |> Response.add_header ("Access-Control-Allow-Origin", "*")
     |> Lwt.return
   in
+  let ret, res = Lwt.task () in
   match
-    let ret, res = Lwt.task () in
     Lwt.bind content (fun x ->
         x |> Yojson.Safe.from_string
         |> (fun x -> Some (name, x, res))
-        |> push;
-        Lwt.bind ret respond)
+        |> push
+        |> Lwt.return
+      )
   with
   | exception _ -> respond (`Assoc [ ("status", `String "Failed") ])
-  | _ -> respond (`Assoc [ ("status", `String "Successful") ])
+  | _ -> Lwt.bind ret respond
 
 let init (push : t) =
   App.empty |> App.port 3000
-  |> begin
-       fun x ->
-       [ "step"; "update_cell" ]
-       |> List.fold_left
-            (fun acc x -> App.post ("/" ^ x) (post x push) acc)
-            x
-     end
+  |> (fun x ->
+     [ "update_cell"; "step" ]
+     |> List.fold_left
+        (fun acc s -> App.post ("/" ^ s) (post s push) acc)
+        x
+   )
   |> App.run_command

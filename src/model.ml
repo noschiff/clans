@@ -109,7 +109,6 @@ let get_world world = world.cells
   |> Array.map Array.to_list
   |> Array.to_list
 
-
 let normalize world x y =
   let modulo a b = ((a mod b) + b) mod b in
   (modulo x world.dim_x, modulo y world.dim_y)
@@ -117,6 +116,14 @@ let normalize world x y =
 let get_cell world x y = 
   let (x, y) = normalize world x y in
   world.cells.(x).(y)
+  
+let clear_cell world x y = 
+  let (x, y) = normalize world x y in
+  world.cells.(x).(y) <- None
+
+let set_cell world x y life = 
+  let (x, y) = normalize world x y in
+  world.cells.(x).(y) <- Some life
 
 let generate_random_life world x y =
   let (x, y) = normalize world x y in
@@ -134,12 +141,6 @@ let generate_random_life world x y =
   | Some _ -> raise (InvalidWorldOperation (x, y))
 
 let get_size world = (world.dim_x, world.dim_y)
-
-let get_nation = function
-  | Some life -> 100. *. life.nation
-  | None -> -1.
-
-let get_coordinate world life = (0, 0)
 
 let calculate_brain_output world life =
   let cutoff = function
@@ -183,22 +184,7 @@ let property_of_offsets world x y property =
     | None -> -1.
   )
 
-let attack life adj_life action_bias =
-  let damage_dealt =
-    Float.min
-      (life.energy |> float_of_int |> ( *. ) (-1.) |> ( *. ) action_bias)
-      (float_of_int adj_life.energy)
-  in
-  life.energy <-
-    life.energy + (0.5 *. damage_dealt |> Float.round |> int_of_float);
-  adj_life.energy <-
-    adj_life.energy - (damage_dealt |> Float.round |> int_of_float)
-
 let mate life adj_life action_bias adj_action_bias = ()
-
-let clear_cell world x y = world.cells.(x).(y) <- None
-
-let set_cell world x y life = world.cells.(x).(y) <- Some life
 
 let rec step world =
   let act life x y =
@@ -238,8 +224,9 @@ let rec step world =
           life.energy <- life.energy - world.params.move_energy_consumption;
         | _ -> () (* No interaction *)
   in let rec pn = function
+  (* Loop through queue to find the first valid cell *)
     | [] -> []
-    | (x, y, id, s) :: t ->
+    | (x, y, id, _) :: t ->
       match get_cell world x y with
       | None -> pn t
       | Some life -> if life.id = id

@@ -187,14 +187,14 @@ function openWorldFile() {
     var file = input.files[0];
     const reader = new FileReader();
     reader.onload = event => {
-      alert("JSON Content: \n" + event.target.result);
+      console.log("JSON Content: \n" + event.target.result);
 
       // TODO: Do something with this World file...
     }
     reader.onerror = error => reject(error)
     reader.readAsText(file);
   } else {
-    alert("No file...");
+    console.log("No file...");
   }
 }
 
@@ -218,14 +218,14 @@ function stepSimulation(stepCount, fullWorld) {
       return response.json();
     }
     throw new Error("Not OK");
-  }).then(data => alert("Successful step:" + JSON.stringify(data)))
+  }).then(data => console.log("Successful step:" + JSON.stringify(data)))
     .catch(reason => {
-      alert("Could not get info from http://localhost:3000/step. Error: " + reason)
+      console.log("Could not get info from http://localhost:3000/step. Error: " + reason)
     });
 }
 
 function postCellInformation(data) {
-  alert(JSON.stringify(data));
+  console.log(JSON.stringify(data));
   fetch('http://localhost:3000/update_cell', {
     method: 'POST',
     body: JSON.stringify(data)
@@ -236,9 +236,9 @@ function postCellInformation(data) {
     }
     throw new Error("Not OK");
   })
-    .then(data => alert("Successful post:" + JSON.stringify(data)))
+    .then(data => console.log("Successful post:" + JSON.stringify(data)))
     .catch(reason => {
-      alert("Could not get info from http://localhost:3000/update_cell. Error: " + reason)
+      console.log("Could not get info from http://localhost:3000/update_cell. Error: " + reason)
     });
 }
 

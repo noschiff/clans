@@ -80,9 +80,6 @@ val get_cell : world -> int -> int -> life option
 val get_size : world -> int * int
 (** [get_size world] returns the size (length,width) of [world] *)
 
-val get_nation : life option -> float
-(** [get_nation cell] returns the nation of [cell] *)
-
 val simulate : world -> unit
 (** [simulate world] executes a simulation step, namely the action of a
     single cell. Does nothing if there are no cells in the world.*)

@@ -1,6 +1,6 @@
 open Clans
 
-let debug = false
+let debug = true
 
 let s, p =
   if debug then print_endline "Called create stream and push function"
@@ -16,10 +16,11 @@ let state =
   x
 
 let handle_post_request (req, json, callback) : 'a Lwt.t =
+  if debug then Printf.printf "Recieved POST <%s>: %s\n" req (Yojson.Safe.show json);
   let open Yojson.Safe.Util in
   ( json |> to_assoc |> fun x ->
     match req with
-    | "update_cell" -> begin
+    | "update_cell" -> (
         json |> Model.cell_from_json |> function
         | Some l ->
             let asc = to_assoc json in
@@ -28,7 +29,7 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
               (List.assoc "y" asc |> to_int)
               l
         | None -> ()
-      end
+      )
     | "step" ->
         let assoc = json |> to_assoc in
         let full_world = List.assoc "full" assoc |> to_bool in
