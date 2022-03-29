@@ -1,5 +1,10 @@
 open Clans
 
+(** TODO: I (Ari) will move the handling of post requets to server.ml
+    shortly. Nothing should be calling them besides what I write and the
+    functionality should be the same, but that's why there's clutter in
+    main. *)
+
 let debug = false
 
 let s, p =
@@ -32,7 +37,7 @@ let do_something_with_post_request (req, json, callback) : 'a Lwt.t =
   	| _ -> failwith "unimplemented"
   );
   state
-  |> Controller.get_json
+  |> Controller.get_json false
   |> Lwt.wakeup_later callback
   |> Lwt.return
 (* Function that recieves the json from a post request, as of right now

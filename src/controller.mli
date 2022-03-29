@@ -21,6 +21,9 @@ val update_cell : state -> int -> int -> Model.life -> unit
 (** [update_cell x y data] updates the cell at coordinates (x, y) with
     new cell data. *)
 
-val get_json : state -> Yojson.Safe.t
-(** [get_json state] Represents the [state] in json format. Called during get
-    requests. *)
+val get_json : bool -> state -> Yojson.Safe.t
+(** [get_json full_world] returns the full world, or just the changes to
+    it depending on [full_world]. *)
+
+val step : state -> unit
+(** Steps the simulation once. *)
