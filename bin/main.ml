@@ -1,5 +1,10 @@
 open Clans
 
+(** TODO: I (Ari) will move the handling of post requets to server.ml
+    shortly. Nothing should be calling them besides what I write and the
+    functionality should be the same, but that's why there's clutter in
+    main. *)
+
 let debug = false
 
 let s, p =
