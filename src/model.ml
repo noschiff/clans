@@ -157,7 +157,7 @@ let doAction world lref =
   in let extremify x = x /. Float.abs x
   in let life = !lref in
   Brain.out life.brain
-  |> function
+  |> (function
     | [dx; dy; h] -> (
       cutoff dx
       |> extremify, 
@@ -168,7 +168,8 @@ let doAction world lref =
         | x when x < 0. -> extremify x
         | x -> x
     )
-    | _ -> failwith "Brain output did not match."
+    | _ -> failwith "Brain output did not match.")
+  |> ignore
 
 let property_of_offsets world x y property =
   let offsets =
@@ -225,13 +226,13 @@ let set_cell world x y life =
 
 let get_queue_nations world = List.map (fun x -> !x.nation) world.lifes
 
-let cell_to_json (l : life option) =
+let cell_to_json l =
   match l with
   | None -> `Assoc [ ("type", `String "empty") ]
   | Some x ->
-      `Assoc
-        [
-          ("type", `String "life");
-          ("nation", `Int x.nation);
-          ("energy", `Float x.energy);
-        ]
+    `Assoc
+      [
+        ("type", `String "life");
+        ("nation", `Int x.nation);
+        ("energy", `Int x.energy);
+      ]
