@@ -16,21 +16,21 @@ let state =
   x
 
 let do_something_with_post_request (req, json) : 'a Lwt.t =
-	let open Yojson.Safe.Util in
-  json |> to_assoc |> (fun x -> 
-  	match req with
-  	| "set_cell" -> json
-  		|> Model.cell_from_json
-  		|> (function 
-  		| Some l -> let asc = to_assoc json in
-	  		Controller.update_cell state (
-	  			List.assoc "x" asc |> to_int
-	  		) (
-	  			List.assoc "y" asc |> to_int
-	  		) l
-	  	| None -> ())
-  	| _ -> failwith "unimplemented"
-  ) |> Lwt.return
+  let open Yojson.Safe.Util in
+  json |> to_assoc
+  |> (fun x ->
+       match req with
+       | "set_cell" -> (
+           json |> Model.cell_from_json |> function
+           | Some l ->
+               let asc = to_assoc json in
+               Controller.update_cell state
+                 (List.assoc "x" asc |> to_int)
+                 (List.assoc "y" asc |> to_int)
+                 l
+           | None -> ())
+       | _ -> failwith "unimplemented")
+  |> Lwt.return
 (* Function that recieves the json from a post request, as of right now
    just prints it to the console. The type signature should not be
    changed. The returned value is not used. *)
