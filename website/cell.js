@@ -1,12 +1,12 @@
 class Cell {
 
-  constructor(x, y, type, nation) {
+  constructor(x, y, type, energy) {
     this.x = x;
     this.y = y;
     this.type = type;
-    this.nation = nation;
     this.selected = false;
     this.highlighted = false;
+    this.energy = energy;
   }
 
 
@@ -19,14 +19,15 @@ class Cell {
   static fromJSON(json) {
     var parsed = JSON.parse(json);
     var type = parsed.type;
-    var nation;
-    if (parsed.hasOwnProperty('nation')) {
-      nation = parsed.nation;
+    var energy;
+
+    if (parsed.hasOwnProperty('energy')) {
+      energy = parsed.energy;
     } else {
-      nation = null;
+      energy = null;
     }
 
-    return new Cell(0, 0, type, nation);
+    return new Cell(0, 0, type, energy);
   }
 
   /**

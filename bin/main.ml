@@ -16,7 +16,11 @@ let original_state =
   x
 
 let do_something_with_post_request (json : Yojson.Safe.t) : 'a Lwt.t =
-  json |> Yojson.Safe.show |> print_endline |> Lwt.return
+	let open Yojson.Safe.Util in
+  json |> to_assoc |> (fun x -> 
+  	match List.assoc "type" x with
+  	| _ -> failwith "unimplemented"
+  ) |> Lwt.return
 (* Function that recieves the json from a post request, as of right now
    just prints it to the console. The type signature should not be
    changed. The returned value is not used. *)

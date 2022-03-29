@@ -6,6 +6,10 @@ let of_list l = l
 	|> List.map Array.of_list
 	|> Array.of_list
 
+let to_list m = m
+	|> Array.map Array.to_list
+	|> Array.to_list
+
 let rows a = Array.length a
 
 let cols a = match rows a with

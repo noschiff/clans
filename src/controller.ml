@@ -12,14 +12,19 @@ let save_to_file filename state =
           |> List.map (fun x ->
                  `List (x |> List.map Model.cell_to_json))) );
     ]
-  |> Yojson.Basic.to_file filename
+  |> Yojson.Safe.to_file filename
 
 let load_from_file state filename =
-  (* let open Yojson.Basic.Util in Yojson.Basic.from_file filename |>
-     to_assoc |> List.assoc "world" |> to_list |> List.map (fun x -> x
-     |> to_list |> List.map Model.cell_to_json) |> Model.load_world |>
-     set_world state *)
-  failwith "FIX"
+  let open Yojson.Safe.Util in Yojson.Safe.from_file filename
+    |> to_assoc
+    |> List.assoc "world" 
+    |> to_list 
+    |> List.map (fun x -> x
+      |> to_list 
+      |> List.map Model.cell_from_json
+    )
+    |> Model.load_world 
+    |> set_world state
 
 let display_cell state x y = state
 (*Model.get_cell state.world x y |> Server.respond (* draw cell*) x y

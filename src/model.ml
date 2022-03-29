@@ -1,8 +1,6 @@
 exception InvalidWorldOperation of int * int
 
 type life = {
-  mutable x : int;
-  mutable y : int;
   mutable nation : float;
       (** Float from 0 to 1, representing the [rad / 2pi] along a circle
           of all possible nations. **)
@@ -127,9 +125,7 @@ let generate_random_life (world : world) x y =
         let life =
           ref
             {
-              x;
-              y;
-              brain = Brain.create 18 2 5 [ 10; 10; 5 ];
+              brain = Brain.create 18 3 5 [ 10; 10; 5 ];
               nation = Random.float 1.;
               energy = world.params.life_initial_energy;
             }
@@ -145,7 +141,7 @@ let get_nation = function
   | Some life -> 100. *. life.nation
   | None -> -1.
 
-let get_coordinate cell = (cell.x, cell.y)
+let get_coordinate cell = failwith "unimplemented"
 
 let calculate_brain_output world lref =
   let cutoff = function
@@ -209,8 +205,7 @@ let simulate world =
   | [] -> ()
   | lref :: t ->
       let life = !lref in
-      let x = life.x in
-      let y = life.y in
+      let (x, y) = get_coordinate life in
       life.brain <-
         Brain.eval life.brain
           (property_of_offsets world x y (fun l ->
@@ -239,9 +234,10 @@ let simulate world =
       world.lifes <- t @ [ lref ]
 
 let clear_cell world x y =
+  let c = get_cell world x y in
   Hashtbl.remove world.cells (to_index world x y);
   world.lifes <-
-    List.filter (fun l -> !l.x <> x && !l.y <> y) world.lifes
+    List.filter (fun l -> Some !l <> c) world.lifes
 
 let inject_cell world x y nation =
   try
@@ -261,9 +257,25 @@ let cell_to_json l =
   match l with
   | None -> `Assoc [ ("type", `String "empty") ]
   | Some x ->
-      `Assoc
-        [
-          ("type", `String "life");
-          ("nation", `Float (100. *. x.nation));
-          ("energy", `Int x.energy);
-        ]
+    `Assoc
+      [
+        ("type", `String "life");
+        ("nation", `Float (100. *. x.nation));
+        ("energy", `Int x.energy);
+        ("brain", Brain.to_json x.brain);
+      ]
+
+let cell_from_json json =
+  let open Yojson.Safe.Util in
+  json
+  |> to_assoc
+  |> (fun x ->
+    match List.assoc "type" x |> to_string with
+    | "empty" -> None
+    | "life" -> Some {
+      nation = List.assoc "nation" x |> to_float;
+      energy = List.assoc "energy" x |> to_int;
+      brain = List.assoc "brain" x |> Brain.from_json;
+    }
+    | _ -> raise (Invalid_argument "Invalid world JSON.")
+  )

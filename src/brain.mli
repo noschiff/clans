@@ -13,6 +13,12 @@ val create : int -> int -> int -> int list -> t
 		Values in neural network will be randomly initialized
 		normal distrbution with stdev 1, mean 0. *)
 
+val to_json : t -> Yojson.Safe.t
+(** [from_json brain] converts [brain] into json. **)
+
+val from_json : Yojson.Safe.t -> t
+(** [from_json json] converts [json] into a brain. **)
+
 val eval : t -> float list -> t
 (** [eval b l] propogates a new input set [l] through
 		the neural network and returns the new state. *)

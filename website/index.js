@@ -1,6 +1,6 @@
 const CELL_SIZE = 5;
-const WIDTH = 200;
-const HEIGHT = 200;
+var WIDTH = 100;
+var HEIGHT = 100;
 
 var world = undefined;
 var highlightedCell = undefined;
@@ -64,6 +64,17 @@ function setSelectedCell(canvasContext, cell) {
 
     updateCellInformation();
     renderCellAtCoordinate(canvasContext, cell.x, cell.y);
+    if (cell.type == "life") {
+      document.getElementById("btnEditCell").innerText = "Edit Cell";
+      document.getElementById("lblEditCell").innerText = "Edit Cell @ (" + cell.x + "," + cell.y + ")"
+      document.getElementById("btnEditCell").disabled = false;
+    } else if (cell.type == "empty") {
+      document.getElementById("btnEditCell").innerText = "Add Cell";
+      document.getElementById("lblEditCell").innerText = "Add Cell @ (" + cell.x + "," + cell.y + ")"
+      document.getElementById("btnEditCell").disabled = false;
+    } else {
+      document.getElementById("btnEditCell").disabled = true;
+    }
   }
 }
 
@@ -79,8 +90,6 @@ function updateCellInformation() {
     } else {
       document.getElementById('cell_nation').innerHTML = "Nation: N/A";
     }
-
-    document.getElementById("btnEditCell").disabled = false;
   }
 }
 
@@ -189,24 +198,31 @@ function openWorldFile() {
   }
 }
 
-function getInformation() {
-  fetch('http://localhost:3000/get', {
-    method: 'GET'
-  }).then(response => {
-    console.log(response);
-    if (response.ok) {
-      return response.json();
-    }
-    throw new Error("Not OK");
-  })
-    .then(data => alert("Successful fetch:" + JSON.stringify(data)))
+/**
+ * Steps the simulation the amount of times specified by stepCount by sending a GET request
+ * to the server, and retrieving the new/changed world state.
+ * @param {Number} stepCount An integer step count. This can be 0, but not less than 0 
+ * @param {Boolean} fullWorld True if the GET request should return the entire world state, false if otherwise. 
+ * This is used for when needing to get the world upon loading the view.
+ */
+function stepSimulation(stepCount, fullWorld) {
+  fetch('http://localhost:3000/step/' + stepCount + "/" + fullWorld)
+    .then(response => {
+      console.log(response);
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error("Not OK");
+    })
+    .then(data => alert("Successful step:" + JSON.stringify(data)))
     .catch(reason => {
-      alert("Could not get info from http://localhost:3000/get. Error: " + reason)
+      alert("Could not get info from http://localhost:3000/stepSimulation. Error: " + reason)
     });
 }
 
 function postCellInformation(data) {
-  fetch('http://localhost:3000/post_cell', {
+  alert(JSON.stringify(data));
+  fetch('http://localhost:3000/update_cell', {
     method: 'POST',
     body: JSON.stringify(data)
   }).then(response => {
@@ -218,7 +234,7 @@ function postCellInformation(data) {
   })
     .then(data => alert("Successful post:" + JSON.stringify(data)))
     .catch(reason => {
-      alert("Could not get info from http://localhost:3000/get. Error: " + reason)
+      alert("Could not get info from http://localhost:3000/update_cell. Error: " + reason)
     });
 }
 
@@ -226,6 +242,7 @@ function postCellInformation(data) {
  * Essentially the main(String[] args) of the website.
  */
 window.onload = function () {
+  stepSimulation(0, true);
   world = new World(WIDTH, HEIGHT);
   var canvas = document.getElementById("sheet");
 
@@ -253,32 +270,21 @@ window.onload = function () {
   });
 
   document.getElementById("btnEditCell").addEventListener("click", function () {
-    document.getElementById("lblEditCell").innerText = "Edit Cell @ (" + selectedCell.x + "," + selectedCell.y + ")"
-    var cellTypeDropdown = document.getElementById("selCellType");
-    cellTypeDropdown.value = selectedCell.type;
-    toggleCellNationInput();
-  });
-
-  document.getElementById("selCellType").addEventListener("change", function () {
-    toggleCellNationInput();
+    var txtCellEnergy = document.getElementById("txtCellEnergy");
+    txtCellEnergy.value = selectedCell.energy;
   });
 
   document.getElementById("btnSaveCell").addEventListener("click", function () {
 
-    var txtCellNation = document.getElementById("txtCellNation");
-    var cellTypeDropdown = document.getElementById("selCellType");
-    if (cellTypeDropdown.value == "life") {
-      selectedCell.nation = txtCellNation.value;
-    } else {
-      selectedCell.nation = "";
-    }
-    selectedCell.type = document.getElementById("selCellType").value;
+    var txtCellEnergy = document.getElementById("txtCellEnergy");
+    selectedCell.type = "life";
+    selectedCell.energy = txtCellEnergy.value;
     postCellInformation({
       x: selectedCell.x,
       y: selectedCell.y,
-      type: selectedCell.type,
-      nation: selectedCell.nation
-    })
+      energy: selectedCell.energy
+    });
+
     updateCellInformation();
     renderCellAtCoordinate(ctx, selectedCell.x, selectedCell.y);
   });
