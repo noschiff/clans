@@ -18,34 +18,41 @@ let state =
 let handle_post_request (req, json, callback) : 'a Lwt.t =
   if debug then Printf.printf "Recieved POST <%s>: %s\n" req (Yojson.Safe.show json);
   let open Yojson.Safe.Util in
-  ( json |> to_assoc |> fun x ->
-    match req with
-    | "update_cell" -> (
-        json |> Model.cell_from_json |> function
-        | Some l ->
-            let asc = to_assoc json in
-            Controller.update_cell state
-              (List.assoc "x" asc |> to_int)
-              (List.assoc "y" asc |> to_int)
-              l
-        | None -> ()
-      )
-    | "step" ->
-        let assoc = json |> to_assoc in
-        let full_world = List.assoc "full" assoc |> to_bool in
-        let steps = List.assoc "steps" assoc |> to_int in
-        let rec call_step n =
-          if n > 0 then begin
-            Controller.step state;
-            call_step (n - 1)
-          end
-          else Controller.get_json full_world state
-        in
-        ignore @@ call_step steps;
-        ()
-    | _ -> failwith "unimplemented" );
-  state
-  |> Controller.get_json true
+  (try 
+    (match req with
+      | "update_cell" -> (
+          json |> Model.cell_from_json |> (function
+            | Some l ->
+                let asc = to_assoc json in
+                Controller.update_cell state
+                  (List.assoc "x" asc |> to_int)
+                  (List.assoc "y" asc |> to_int)
+                  l
+            | None -> ()
+          );
+          Controller.get_json false state
+        )
+      | "step" -> (
+          let assoc = json |> to_assoc in
+          let full_world = List.assoc "full" assoc |> to_bool in
+          let steps = List.assoc "steps" assoc |> to_int in
+          let rec call_step n =
+            if n > 0 then begin
+              Controller.step state;
+              call_step (n - 1)
+            end
+            else Controller.get_json full_world state
+          in
+          call_step steps
+        )
+      | _ -> 
+        if debug then print_endline "invalid request";
+        Controller.get_json false state
+    )
+  with
+    | e -> 
+      if debug then Printf.printf "exception encountered: \n%s\n" @@ Printexc.to_string e;
+      Controller.get_json false state)
   |> Lwt.wakeup_later callback
   |> Lwt.return
 

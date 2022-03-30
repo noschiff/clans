@@ -283,11 +283,11 @@ window.onload = function () {
     var txtCellEnergy = document.getElementById("txtCellEnergy");
     selectedCell.type = "life";
     selectedCell.energy = txtCellEnergy.value;
-    postCellInformation({
+    postCellInformation(Object.assign (selectedCell.data, {
       x: selectedCell.x,
       y: selectedCell.y,
       energy: selectedCell.energy
-    });
+    }));
 
     updateCellInformation();
     renderCellAtCoordinate(ctx, selectedCell.x, selectedCell.y);

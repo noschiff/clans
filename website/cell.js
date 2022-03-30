@@ -1,12 +1,13 @@
 class Cell {
 
-  constructor(x, y, type, energy) {
+  constructor(x, y, type, energy, data) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.selected = false;
     this.highlighted = false;
     this.energy = energy;
+    this.data = data;
   }
 
 
@@ -27,7 +28,7 @@ class Cell {
       energy = null;
     }
 
-    return new Cell(0, 0, type, energy);
+    return new Cell(0, 0, type, energy, data);
   }
 
   /**
