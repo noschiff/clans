@@ -25,6 +25,12 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
          (json |> Model.cell_from_json |> function
           | Some l ->
               let asc = to_assoc json in
+              if debug then
+                asc
+                |> (fun x ->
+                     List.fold_left (fun acc e -> acc ^ fst e) "" x)
+                |> print_endline
+              else ();
               Controller.update_cell state
                 (List.assoc "x" asc |> to_int)
                 (List.assoc "y" asc |> to_int)
@@ -48,9 +54,11 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
          Controller.get_json false state
    with
   | e ->
-      if debug then
+      if debug then begin
         Printf.printf "exception encountered: \n%s\n"
         @@ Printexc.to_string e;
+        Printexc.print_backtrace Stdlib.stdout
+      end;
       Controller.get_json false state)
   |> Lwt.wakeup_later callback
   |> Lwt.return

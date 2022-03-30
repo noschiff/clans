@@ -272,7 +272,11 @@ let cell_to_json l =
 
 let cell_from_json json =
   let open Yojson.Safe.Util in
-  json |> to_assoc |> fun x ->
+  ( json |> to_assoc |> fun x ->
+    match List.assoc "type" x with
+    | exception Not_found -> [ ("type", json) ]
+    | _correct_format -> x )
+  |> fun x ->
   match List.assoc "type" x |> to_string with
   | "empty" -> None
   | "life" ->
