@@ -41,7 +41,11 @@ val dot : t -> t -> t
 
     Requires: a has the same number of columns as b has rows. *)
 
-val plus : t -> t -> t
-(** [plus a b] returns the elementwise addition of a and b.
+val map2 : (float -> float -> float) -> t -> t -> t
+(** [map f a b] applies [f aij bij] on corresponding elements
+    [aij] and [bij] of [a] and [b].
 
     Requires: a and b have the same dimensions. *)
+
+val map : (float -> float) -> t -> t
+(** [map a f] applies f to every element of [a]. **)

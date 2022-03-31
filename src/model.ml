@@ -225,16 +225,12 @@ let clear_cell world x y =
   let x, y = normalize world x y in
   match world.cells.(x).(y) with
   | None -> ()
-  | Some l ->
-    denergy world l @@ -l.energy;
+  | Some l -> world.bank <- world.bank + l.energy;
     world.cells.(x).(y) <- None
 
 let set_cell world x y life =
   let x, y = normalize world x y in
-  (match world.cells.(x).(y) with
-  | None -> ()
-  | Some l ->
-    denergy world l @@ -l.energy);
+  clear_cell world x y;
   world.bank <- world.bank - life.energy;
   world.cells.(x).(y) <- Some life
 
@@ -259,11 +255,11 @@ let random_life world x y =
   | Some _ -> raise (InvalidWorldOperation (x, y))
 
 let populate_random world d = 
-  let available = 
-    float_of_int world.bank *. d
+  let until = 
+    float_of_int world.bank *. (1.-.d)
     |> int_of_float
     |> max 0
-  in let rec p _ = if world.bank > available
+  in let rec p _ = if world.bank > until
   then
     let x, y = 
       Random.int world.dim_x, Random.int world.dim_y in
@@ -324,43 +320,48 @@ let rec step world =
       (a -. b +. 1. |> fun x -> Float.rem x 1.) |> fun x ->
       if x < 0.5 then x else 1. -. x
     in
-    life.brain <-
-      Brain.eval life.brain
-        (property_of_offsets world x y (fun l ->
-             float_of_int l.energy /. float_of_int life.energy)
-        @ property_of_offsets world x y (fun l ->
-              ringdist l.nation life.nation));
-    let dx, dy, h = calculate_brain_output world life in
-    let nx, ny = (x + dx, y + dy) in
-    match get_cell world nx ny with
-    | None ->
-        (* No cell here, just move *)
-        - world.params.move_energy_consumption |> denergy world life;
-        (* only move if we have the energy to, otherwise die *)
-        if life.energy > 0 then set_cell world nx nx life;
-        clear_cell world x y
-    | Some lifeo -> (
-        (* Cell here, interact *)
-        let _, _, ho = calculate_brain_output world lifeo in
-        match (h, ho) with
-        | _ when h > 0. && ho > 0. -> () (* Mate *)
-        | -1., _ ->
-            (* attacking *)
-            let e, eo = (life.energy, lifeo.energy) in
-            let de =
-              (* calculate attack value *)
-              float_of_int e *. world.params.attack_damage
-              |> Float.ceil
-              |> Float.min @@ float_of_int eo
-            in
-            let gde = de *. world.params.attack_energy_retained in
-            life.energy <- e + int_of_float gde;
-            lifeo.energy <- e - int_of_float de;
-            if lifeo.energy <= 0 then clear_cell world nx ny;
-            (* Remove the cost of acting *)
-            life.energy <-
-              life.energy - world.params.move_energy_consumption
-        | _ -> ())
+    if life.energy = 0 then (clear_cell world x y; (-1, -1))
+    else (
+      life.brain <-
+        Brain.eval life.brain
+          (property_of_offsets world x y (fun l ->
+               float_of_int l.energy /. float_of_int life.energy)
+          @ property_of_offsets world x y (fun l ->
+                ringdist l.nation life.nation));
+      let dx, dy, h = calculate_brain_output world life in
+      let nx, ny = (x + dx, y + dy) in
+      match get_cell world nx ny with
+      | None ->
+          (* No cell here, just move *)
+          denergy world life @@ -world.params.move_energy_consumption ;
+          (* only move if we have the energy to, otherwise die *)
+          if life.energy > 0 then set_cell world nx ny life;
+          clear_cell world x y;
+          (nx, ny)
+      | Some lifeo -> (
+          (* Cell here, interact *)
+          let _, _, ho = calculate_brain_output world lifeo in
+          match (h, ho) with
+          | _ when h > 0. && ho > 0. -> (x, y) (* Mate *)
+          | -1., _ ->
+              (* attacking *)
+              let e, eo = (life.energy, lifeo.energy) in
+              let de =
+                (* calculate attack value *)
+                float_of_int e *. world.params.attack_damage
+                |> Float.ceil
+                |> Float.min @@ float_of_int eo
+              in
+              let gde = de *. world.params.attack_energy_retained in
+              denergy world life @@ int_of_float gde;
+              denergy world lifeo @@ -int_of_float de;
+              if lifeo.energy <= 0 then clear_cell world nx ny;
+              (* Remove the cost of acting *)
+              denergy world life @@ -world.params.move_energy_consumption;
+              if life.energy <= 0 then clear_cell world x y;
+              (x, y)
+          | _ -> (x, y))
+    )
     (* No interaction *)
   in
   let rec pn = function
@@ -370,12 +371,10 @@ let rec step world =
         match get_cell world x y with
         | None -> pn t
         | Some life ->
-            if life.id = id then (
-              act life x y;
-              t
-              @
-              if life.energy > 0 then [ (x, y, id, world.steps) ]
-              else [])
+            if life.id = id then
+              (let nx, ny = act life x y in
+                t @ (if life.energy > 0 then [ (nx, ny, id, world.steps) ]
+                else []))
             else pn t)
   in
   world.queue <- pn world.queue
@@ -385,7 +384,7 @@ let simulate world =
   let rec rstep _ =
     match world.queue with
     | [] -> ()
-    | (_, _, id, s) :: _ when s < world.steps -> ()
+    | (_, _, id, s) :: _ when s >= world.steps -> ()
     | (_, _, oid, _) :: _ ->
         step world;
         rstep ()

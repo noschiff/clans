@@ -102,7 +102,8 @@ let eval brain inp =
     | 0 -> r
     | _ ->
         Matrix.dot r brain.weights.(i)
-        |> Matrix.plus brain.biases.(i)
+        |> Matrix.map2 ( +. ) brain.biases.(i)
+        |> Matrix.map Float.tanh
         |> e (i + 1)
   in
   inp @ Array.to_list brain.mem

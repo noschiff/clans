@@ -41,8 +41,13 @@ let dot a b =
   assert (cols x = cols b);
   x
 
-let plus a b =
+let map2 f a b =
   assert (dims a = dims b);
-  Array.map2 (fun ra rb -> Array.map2 ( +. ) ra rb) a b |> fun x ->
+  Array.map2 (fun ra rb -> Array.map2 f ra rb) a b |> fun x ->
+  assert (dims x = dims a);
+  x
+
+let map f a =
+  Array.map (fun ra -> Array.map f ra) a |> fun x ->
   assert (dims x = dims a);
   x

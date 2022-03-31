@@ -87,6 +87,7 @@ function updateCellInformation() {
   if (selectedCell != undefined) {
     document.getElementById('cell_coordinate').innerHTML = "Coordinate: (" + selectedCell.x + "," + selectedCell.y + ")";
     document.getElementById('cell_type').innerHTML = "Type: " + selectedCell.type;
+    document.getElementById('cell_energy').innerHTML = `Energy: ${selectedCell.energy}`;
     if (selectedCell.type == "life") {
       document.getElementById('cell_nation').innerHTML = "Nation: " + selectedCell.nation;
     } else {
