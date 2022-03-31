@@ -5,24 +5,29 @@ type state
     information on a view and a model. *)
 
 val init : Model.world -> state
-(** [init] creates the view and an empty model with an event handler. *)
+(** [init w] creates a controller with a world [w]. *)
 
 val save_to_file : string -> state -> unit
-(** [save_to_file file] Saves the currently open model to [file]. *)
+(** [save_to_file file s] Saves [s] to [file]. *)
 
 val load_from_file : state -> string -> unit
-(** Load a model from file *)
+(** [load_from_file s f] Loads a model from file [f] to [s]*)
 
 val display_cell : state -> int -> int -> unit
-(** [display_cell x y] display a cell at coordinates (x, y) to the
+(** [display_cell s x y] display a cell at coordinates (x, y) to the
     siebar *)
 
 val update_cell : state -> int -> int -> Model.life -> unit
-(** [update_cell x y data] updates the cell at coordinates ([x], [y])
+(** [update_cell s x y data] updates the cell at coordinates ([x], [y])
     with new cell [data]. *)
 
 val random_cell : state -> int -> int -> unit
-(** [random_cell x y] inserts a random cell at ([x], [y]) *)
+(** [random_cell s x y] inserts a random cell at ([x], [y]) *)
+
+val populate_world : state -> float -> unit
+(** [populate_world s d] populates the world in [s]
+    with [d] representing the prop of energy in the bank
+    to use **)
 
 val get_json : bool -> state -> Yojson.Safe.t
 (** [get_json full_world state] returns the json of [state], or just the
@@ -31,4 +36,4 @@ val get_json : bool -> state -> Yojson.Safe.t
     NOTE: [full_world] is currently unused in this implimentation. *)
 
 val step : state -> unit
-(** Steps the simulation once. *)
+(** [step s] Steps the simulation in [s] once. *)

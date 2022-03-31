@@ -25,13 +25,12 @@ type params = {
           (default: 0.001)
 
           Requires: [0 < step_distributed_energy <= 1] **)
-  initial_steps : int;
-      (** Number of steps worth of energy to distribute to a 
-          randomly generated cell at the beginning of its life.
-          Only used during population.
+  initial_energy : int;
+      (** Amount of initial energy to give to randomly generated
+          cells (only used during population).
           (default: 100)
 
-          Requires: [0 < initial_steps] **)
+          Requires: [0 < initial_energy] **)
   action_threshold : float;
       (** Threshold for hostility/docility/move action (Default 0.3)
 
@@ -88,7 +87,7 @@ let pos_mod n divisor =
 let default_params =
   {
     energy_per_cell = 5;
-    initial_steps = 100;
+    initial_energy = 100;
     step_distributed_energy = 0.001;
     action_threshold = 0.3;
     attack_damage = 1.;
@@ -153,7 +152,7 @@ let to_json world = `Assoc [
   ("params", `Assoc [
     ("energy_per_cell", `Int world.params.energy_per_cell);
     ("step_distributed_energy", `Float world.params.step_distributed_energy);
-    ("initial_steps", `Int world.params.initial_steps);
+    ("initial_energy", `Int world.params.initial_energy);
     ("action_threshold", `Float world.params.action_threshold);
     ("attack_damage", `Float world.params.attack_damage);
     ("attack_energy_retained", `Float world.params.attack_energy_retained);
@@ -188,7 +187,7 @@ let of_json json =
     {
       energy_per_cell = p |> List.assoc "energy_per_cell" |> to_int;
       step_distributed_energy = p |> List.assoc "step_distributed_energy" |> to_float;
-      initial_steps = p |> List.assoc "initial_steps" |> to_int;
+      initial_energy = p |> List.assoc "initial_energy" |> to_int;
       action_threshold = p |> List.assoc "action_threshold" |> to_float;
       attack_damage = p |> List.assoc "attack_damage" |> to_float;
       attack_energy_retained = p |> List.assoc "attack_energy_retained" |> to_float;
@@ -245,17 +244,34 @@ let random_life world x y =
   | None ->
       world.counter <- world.counter + 1;
       (* Increment cell id count *)
-      world.cells.(x).(y) <-
-        Some
-          {
-            id = world.counter;
-            brain = Brain.create 18 3 5 [ 10; 10; 5 ];
-            nation = Random.float 1.;
-            energy = 0;
-          };
+      set_cell world x y
+        {
+          id = world.counter;
+          brain = Brain.create 18 3 5 [ 10; 10; 5 ];
+          nation = Random.float 1.;
+          (* this can allow the world energy bank to become
+          negative, meaning it will consume energy from living
+          cells. *)
+          energy = world.params.initial_energy;
+        };
       world.queue <-
         world.queue @ [ (x, y, world.counter, world.steps) ]
   | Some _ -> raise (InvalidWorldOperation (x, y))
+
+let populate_random world d = 
+  let available = 
+    float_of_int world.bank *. d
+    |> int_of_float
+    |> max 0
+  in let rec p _ = if world.bank > available
+  then
+    let x, y = 
+      Random.int world.dim_x, Random.int world.dim_y in
+    match random_life world x y with
+    | exception (InvalidWorldOperation _) -> ();
+    | _ -> ();
+    p ()
+  in p ()
 
 let get_size world = (world.dim_x, world.dim_y)
 
