@@ -285,6 +285,9 @@ let cell_from_json json =
           id = List.assoc "id" x |> to_int;
           nation = List.assoc "nation" x |> to_float;
           energy = List.assoc "energy" x |> to_int;
-          brain = List.assoc "brain" x |> Brain.from_json;
+          brain =
+            (match List.assoc "brain" x with
+            | exception Not_found -> Brain.create 18 3 5 [ 10; 10; 5 ]
+            | json -> Brain.from_json json);
         }
   | _ -> raise (Invalid_argument "Invalid world JSON.")
