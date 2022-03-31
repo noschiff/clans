@@ -201,6 +201,18 @@ function openWorldFile() {
   }
 }
 
+function renderWorld(data) {
+  console.log(data);
+  for (let x = 0; x < data.world.cells.length; x++) {
+
+    var cellRow = data.world.cells[x];
+    for (let y = 0; y < cellRow.length; y++) {
+      world.setCell(x, y, Object.assign(world.getCell(x, y), cellRow[y]));
+    }
+  }
+  renderCanvas(ctx);
+}
+
 /**
  * Steps the simulation the amount of times specified by stepCount by sending a GET request
  * to the server, and retrieving the new/changed world state.
@@ -222,15 +234,7 @@ function stepSimulation(stepCount, fullWorld) {
     }
     throw new Error("Not OK");
   }).then(data => {
-
-    for (let x = 0; x < data.world.length; x++) {
-
-      var cellRow = data.world[x];
-      for (let y = 0; y < cellRow.length; y++) {
-        world.setCell(x, y, Object.assign(world.getCell(x, y), cellRow[y]));
-      }
-    }
-    renderCanvas(ctx);
+    renderWorld(data);
     console.log("Successful step");
 
   })
@@ -251,7 +255,9 @@ function postCellInformation(data) {
     }
     throw new Error("Not OK");
   })
-    .then(data => console.log("Successful post:" + JSON.stringify(data)))
+    .then(data => {
+      renderWorld(data);
+    })
     .catch(reason => {
       console.log("Could not get info from http://localhost:3000/update_cell. Error: " + reason)
     });
@@ -270,7 +276,9 @@ function populate() {
     }
     throw new Error("Not OK");
   })
-    .then(data => console.log("Successful post:" + JSON.stringify(data)))
+    .then(data => {
+      renderWorld(data);
+    })
     .catch(reason => {
       console.log("Could not get info from http://localhost:3000/populate. Error: " + reason)
     });
