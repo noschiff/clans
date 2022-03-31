@@ -12,6 +12,25 @@ type life
     world*)
 
 type params = {
+  energy_per_cell : int;
+      (** amount of energy given to the energy bank as a linear function
+          to the number of cells (default 5)
+
+          Requires: [0 <= energy_per_cell] **)
+  step_distributed_energy : float;
+      (** Proportion of global energy bank distributed to
+          each cell at the onset of its step. This will affect
+          the equilibrium population.
+          (default: 0.001)
+
+          Requires: [0 < step_distributed_energy <= 1] **)
+  initial_steps : int;
+      (** Number of steps worth of energy to distribute to a 
+          randomly generated cell at the beginning of its life.
+          Only used during population.
+          (default: 100)
+
+          Requires: [0 < initial_steps] **)
   action_threshold : float;
       (** Threshold for hostility/docility/move action (Default 0.3)
 
@@ -26,11 +45,6 @@ type params = {
           Extra energy will be given to the energy bank. (Default 0.5)
 
           Requires: [0 <= attack_energy_retained <= 1]**)
-  energy_per_cell : int;
-      (** amount of energy given to the energy bank as a linear function
-          to the number of cells (default 5)
-
-          Requires: [0 <= energy_per_cell] **)
   move_energy_consumption : int;
       (** Amount of energy (constant) consumed on a move action.
           (default 1)
@@ -46,12 +60,6 @@ type params = {
           reproduction. Rest of energy is given to bank. (default 0.9)
 
           Requires: [0 <= reproduction_energy_retention <= 1]**)
-  life_initial_energy : int;
-      (** Initial energy given to each life form. This and
-          energy_per_cell dictate how common cells will be initially.
-          (default: 100)
-
-          Requires: [0 < life_initial_energy] **)
 }
 (** Type representing all parameters. **)
 
@@ -62,15 +70,14 @@ val new_world : int -> int -> world
 (** [new_world dimx dimy] instantiates and returns a new world with no
     cells*)
 
-val load_world : life option list list -> world
-(** [load_world cells] returns a world from a list of cells*)
+val of_json : Yojson.Safe.t -> world
+(** [of_json json] returns a world from its json representation. *)
 
-val get_world : world -> life option list list
-(** [get_world world] returns a list of list of cells where the [i],
-    [j]'th element of the list is equivalent [to get_cell i j]. *)
+val to_json : world -> Yojson.Safe.t
+(** [to_json world] returns the json representation of a world. *)
 
-val generate_random_life : world -> int -> int -> unit
-(** [generate_random_life world x y] inserts a new life form with random
+val random_life : world -> int -> int -> unit
+(** [random_life world x y] inserts a new life form with random
     attributes at ([x], [y])*)
 
 val get_cell : world -> int -> int -> life option

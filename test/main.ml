@@ -22,7 +22,10 @@ let controller_tests =
       let state = Controller.init @@ Model.new_world 1 1 in
       Controller.random_cell state 0 0;
       Controller.step state;
-      Controller.save_to_file (data_dir ^ "cell1x1.json") state );
+      Controller.save_to_file (data_dir ^ "cell1x1.json") state;
+      let nstate = Controller.init @@ Model.new_world 1 1 in
+      Controller.load_from_file nstate (data_dir ^ "cell1x1.json");
+      assert_equal state nstate);
   ]
 
 let suite =
