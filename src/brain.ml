@@ -37,13 +37,13 @@ let create i o m l =
        ls
        |> (function
             | a :: b :: l -> f a b l
-            | _ -> failwith "impossible")
+            | _ -> raise (Failure "impossible"))
        |> Array.of_list);
     biases =
       ls
       |> (function
            | a :: b -> b
-           | _ -> failwith "impossible")
+           | _ -> raise (Failure "impossible"))
       |> List.map (fun x -> normal_matrix 1 x)
       |> Array.of_list;
     mem = Array.make m 0.;
