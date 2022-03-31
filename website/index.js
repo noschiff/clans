@@ -297,11 +297,14 @@ window.onload = function () {
 
     var txtCellEnergy = document.getElementById("txtCellEnergy");
     selectedCell.type = "life";
-    selectedCell.energy = txtCellEnergy.value;
+    selectedCell.energy = parseInt(txtCellEnergy.value);
     postCellInformation(Object.assign(selectedCell.data, {
+      id: parseInt(selectedCell.x + "" + selectedCell.y),
       x: selectedCell.x,
       y: selectedCell.y,
-      energy: selectedCell.energy
+      type: "life",
+      energy: selectedCell.energy,
+      nation: 0.5
     }));
 
     updateCellInformation();
