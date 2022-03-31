@@ -261,7 +261,7 @@ function populate() {
   fetch('http://localhost:3000/populate', {
     method: 'POST',
     body: JSON.stringify({
-      density: 1.0
+      density: 0.9
     })
   }).then(response => {
     console.log(response);

@@ -24,13 +24,12 @@ type params = {
           (default: 0.001)
 
           Requires: [0 < step_distributed_energy <= 1] **)
-  initial_steps : int;
-      (** Number of steps worth of energy to distribute to a 
-          randomly generated cell at the beginning of its life.
-          Only used during population.
+  initial_energy : int;
+      (** Amount of initial energy to give to randomly generated
+          cells (only used during population).
           (default: 100)
 
-          Requires: [0 < initial_steps] **)
+          Requires: [0 < initial_energy] **)
   action_threshold : float;
       (** Threshold for hostility/docility/move action (Default 0.3)
 
