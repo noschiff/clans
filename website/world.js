@@ -29,6 +29,10 @@ class World {
     return this.cellArray[x][y];
   }
 
+  setCell(x, y, cell) {
+    this.cellArray[x][y] = cell;
+  }
+
   /**
    * Gets the width of the world.
    * @returns The width.

@@ -6,6 +6,8 @@ var world = undefined;
 var highlightedCell = undefined;
 var selectedCell = undefined;
 
+var canvas = document.getElementById("sheet");
+var ctx = canvas.getContext("2d");
 /**
  * Sets the highlighted cell, creating a + shape at its coordinates.
  * @param {CanvasRenderingContext2D} canvasContext 
@@ -132,6 +134,7 @@ function renderCellAtCoordinate(canvasContext, x, y) {
  * @param {CanvasRenderingContext2D} canvasContext 
  */
 function renderCanvas(canvasContext) {
+
   var m_canvas = document.createElement('canvas');
   m_canvas.width = WIDTH * CELL_SIZE;
   m_canvas.height = HEIGHT * CELL_SIZE;
@@ -142,7 +145,7 @@ function renderCanvas(canvasContext) {
 
       var cell = world.getCell(k, i);
       m_context.fillStyle = cell.getColor();
-      m_context.fillRect(i, k, 1, 1);
+      m_context.fillRect(k, i, 1, 1);
     }
   }
 
@@ -218,7 +221,19 @@ function stepSimulation(stepCount, fullWorld) {
       return response.json();
     }
     throw new Error("Not OK");
-  }).then(data => console.log("Successful step:" + JSON.stringify(data)))
+  }).then(data => {
+
+    for (let x = 0; x < data.world.length; x++) {
+
+      var cellRow = data.world[x];
+      for (let y = 0; y < cellRow.length; y++) {
+        world.setCell(x, y, Object.assign(world.getCell(x, y), cellRow[y]));
+      }
+    }
+    renderCanvas(ctx);
+    console.log("Successful step");
+
+  })
     .catch(reason => {
       console.log("Could not get info from http://localhost:3000/step. Error: " + reason)
     });
@@ -246,21 +261,21 @@ function postCellInformation(data) {
  * Essentially the main(String[] args) of the website.
  */
 window.onload = function () {
-  stepSimulation(0, true);
-  world = new World(WIDTH, HEIGHT);
-  var canvas = document.getElementById("sheet");
 
-  var ctx = canvas.getContext("2d");
+  world = new World(WIDTH, HEIGHT);
+
   canvas.width = WIDTH * CELL_SIZE;
   canvas.height = HEIGHT * CELL_SIZE;
+  ctx.imageSmoothingEnabled = false;
   ctx.scale(CELL_SIZE, CELL_SIZE);
 
-  renderCanvas(ctx);
+  stepSimulation(0, true);
 
   canvas.addEventListener("mousemove", function (e) {
     if (!e) e = window.event;
     var x = e.offsetX == undefined ? e.layerX : e.offsetX;
     var y = e.offsetY == undefined ? e.layerY : e.offsetY;
+
     var cell = getCellFromCanvasCoords(x, y);
     setHighlightedCell(ctx, cell);
   });

@@ -18,17 +18,16 @@ class Cell {
    * @returns A cell constructed from JSON.
    */
   static fromJSON(json) {
-    var parsed = JSON.parse(json);
-    var type = parsed.type;
+    var type = json.type;
     var energy;
 
-    if (parsed.hasOwnProperty('energy')) {
-      energy = parsed.energy;
+    if (json.hasOwnProperty('energy')) {
+      energy = json.energy;
     } else {
       energy = null;
     }
 
-    return new Cell(0, 0, type, energy, data);
+    return new Cell(0, 0, type, energy, json);
   }
 
   /**
