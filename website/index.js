@@ -203,7 +203,6 @@ function openWorldFile() {
 }
 
 function renderWorld(data) {
-  console.log(data);
   for (let x = 0; x < data.world.cells.length; x++) {
 
     var cellRow = data.world.cells[x];
@@ -236,7 +235,6 @@ function stepSimulation(stepCount, fullWorld) {
     throw new Error("Not OK");
   }).then(data => {
     renderWorld(data);
-    console.log("Successful step");
 
   })
     .catch(reason => {
