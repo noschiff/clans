@@ -257,6 +257,25 @@ function postCellInformation(data) {
     });
 }
 
+function populate() {
+  fetch('http://localhost:3000/populate', {
+    method: 'POST',
+    body: JSON.stringify({
+      density: 1.0
+    })
+  }).then(response => {
+    console.log(response);
+    if (response.ok) {
+      return response.json();
+    }
+    throw new Error("Not OK");
+  })
+    .then(data => console.log("Successful post:" + JSON.stringify(data)))
+    .catch(reason => {
+      console.log("Could not get info from http://localhost:3000/populate. Error: " + reason)
+    });
+}
+
 /**
  * Essentially the main(String[] args) of the website.
  */
