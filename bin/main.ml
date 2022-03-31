@@ -20,38 +20,45 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
     Printf.printf "Recieved POST <%s>: %s\n" req (Yojson.Safe.show json);
   let open Yojson.Safe.Util in
   (try
-     match req with
-     | "update_cell" ->
-         (json |> Model.cell_from_json |> function
-          | Some l ->
-              let asc = to_assoc json in
-              if debug then
-                asc
-                |> (fun x ->
-                     List.fold_left (fun acc e -> acc ^ fst e) "" x)
-                |> print_endline
-              else ();
-              Controller.update_cell state
-                (List.assoc "x" asc |> to_int)
-                (List.assoc "y" asc |> to_int)
-                l
-          | None -> ());
-         Controller.get_json false state
-     | "step" ->
-         let assoc = json |> to_assoc in
-         let full_world = List.assoc "full" assoc |> to_bool in
-         let steps = List.assoc "steps" assoc |> to_int in
-         let rec call_step n =
-           if n > 0 then begin
-             Controller.step state;
-             call_step (n - 1)
-           end
-           else Controller.get_json full_world state
-         in
-         call_step steps
-     | _ ->
-         if debug then print_endline "invalid request";
-         Controller.get_json false state
+    match req with
+    | "update_cell" ->
+       (json |> Model.cell_from_json |> function
+        | Some l ->
+            let asc = to_assoc json in
+            if debug then
+              asc
+              |> (fun x ->
+                   List.fold_left (fun acc e -> acc ^ fst e) "" x)
+              |> print_endline
+            else ();
+            Controller.update_cell state
+              (List.assoc "x" asc |> to_int)
+              (List.assoc "y" asc |> to_int)
+              l
+        | None -> ());
+       Controller.get_json false state
+    | "step" ->
+       let assoc = json |> to_assoc in
+       let full_world = List.assoc "full" assoc |> to_bool in
+       let steps = List.assoc "steps" assoc |> to_int in
+       let rec call_step n =
+         if n > 0 then begin
+           Controller.step state;
+           call_step (n - 1)
+         end
+         else Controller.get_json full_world state
+       in
+       call_step steps
+    | "populate" ->
+      json 
+      |> to_assoc 
+      |> List.assoc "density" 
+      |> to_float
+      |> Controller.populate_world state;
+      Controller.get_json false state;
+    | _ ->
+       if debug then print_endline "invalid request";
+       Controller.get_json false state
    with
   | e ->
       if debug then begin

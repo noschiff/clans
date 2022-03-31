@@ -80,6 +80,10 @@ val random_life : world -> int -> int -> unit
 (** [random_life world x y] inserts a new life form with random
     attributes at ([x], [y])*)
 
+val populate_random : world -> float -> unit
+(** [populate_random world d] uses [d *. world.bank] energy to populate
+    the world with as many random cells as it can. **)
+
 val get_cell : world -> int -> int -> life option
 (** [get_cell x y] Returns the cell at the specified [x] and [y].
     Pre-condition: the coordinates must be valid *)

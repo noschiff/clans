@@ -31,4 +31,7 @@ let update_cell state x y cell =
 let random_cell state x y =
   Model.random_life (get_world state) x y
 
+let populate_world state d =
+  Model.populate_random (get_world state) d
+
 let step state = state |> get_world |> Model.simulate
