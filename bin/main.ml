@@ -62,8 +62,9 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
    with
   | e ->
       if debug then begin
-        Printf.printf "exception encountered: \n%s\n"
-        @@ Printexc.to_string e;
+        Printf.printf "exception encountered: \n%s\nTRACE:\n%s\n"
+        (Printexc.to_string e)
+        (Printexc.get_backtrace ());
         Printexc.print_backtrace Stdlib.stdout
       end;
       Controller.get_json false state)
