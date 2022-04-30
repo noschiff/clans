@@ -17,3 +17,7 @@ clean:
 
 doc:
 	dune build @doc
+
+zip:
+	rm -f MS2.zip
+	zip -r MS2.zip . -x@exclude.lst

@@ -7,6 +7,7 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.zip
 
 # ocamlbuild working directory
 _build/
@@ -31,9 +32,6 @@ _opam/
 # Workspace files
 .vscode
 .VSCodeCounter
-
-# Bogue libraries
-*.dylib
 
 # Mac files
 *.DS_Store
