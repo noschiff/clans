@@ -29,12 +29,16 @@ let post name (push : t) req =
 
 let init (push : t) =
   App.empty |> App.port 3000
-  |> (fun x ->
+  |> begin
+       fun x ->
        [ "update_cell"; "step"; "populate"; "load" ]
        |> List.fold_left
             (fun acc s -> App.post ("/" ^ s) (post s push) acc)
-            x)
-  |> (fun x ->
+            x
+     end
+  |> begin
+       fun x ->
        if debug then print_endline "Server.init completed" else ();
-       x)
+       x
+     end
   |> App.run_command

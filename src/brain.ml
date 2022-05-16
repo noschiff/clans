@@ -72,18 +72,20 @@ let create i o m l =
   let ls = ((i + m) :: l) @ [ o + m ] in
   {
     weights =
-      (let rec f a b l =
-         normal_matrix a b
-         ::
-         (match l with
-         | [] -> []
-         | c :: l2 -> f b c l2)
-       in
-       ls
-       |> (function
-            | a :: b :: l -> f a b l
-            | _ -> raise (Failure "impossible"))
-       |> Array.of_list);
+      begin
+        let rec f a b l =
+          normal_matrix a b
+          ::
+          (match l with
+          | [] -> []
+          | c :: l2 -> f b c l2)
+        in
+        ls
+        |> (function
+             | a :: b :: l -> f a b l
+             | _ -> raise (Failure "impossible"))
+        |> Array.of_list
+      end;
     biases =
       ls
       |> (function
@@ -112,10 +114,11 @@ let mutate ?r ?g p b =
       | Some x -> x
     with
     | c when c < 0. -> failwith "Invalid float"
-    | c when 0. <= c && c < p.swap_chance -> (
+    | c when 0. <= c && c < p.swap_chance -> begin
         match g with
         | Some x -> x
-        | None -> gaussian ())
+        | None -> gaussian ()
+      end
     | c when p.swap_chance <= c && c < p.swap_chance +. p.mutate_chance
       ->
         v +. normal ?g 0. p.mutate_stdev
@@ -131,8 +134,15 @@ let mutate ?r ?g p b =
 
 let matrix_to_json m =
   `List
-    (m |> Matrix.to_list
-    |> List.map (fun x -> `List (x |> List.map (fun x -> `Float x))))
+    begin
+      m |> Matrix.to_list
+      |> List.map (fun x ->
+             `List
+               begin
+                 x
+                 |> List.map (fun x -> `Float x)
+               end)
+    end
 
 let matrix_from_json j =
   let open Yojson.Safe.Util in
@@ -144,15 +154,27 @@ let to_json b =
   `Assoc
     [
       ( "weights",
-        `List (b.weights |> Array.to_list |> List.map matrix_to_json) );
+        `List
+          begin
+            b.weights |> Array.to_list |> List.map matrix_to_json
+          end );
       ( "biases",
-        `List (b.biases |> Array.to_list |> List.map matrix_to_json) );
+        `List
+          begin
+            b.biases |> Array.to_list |> List.map matrix_to_json
+          end );
       ( "mem",
-        `List (b.mem |> Array.to_list |> List.map (fun x -> `Float x))
-      );
+        `List
+          begin
+            b.mem |> Array.to_list
+            |> List.map (fun x -> `Float x)
+          end );
       ( "out",
-        `List (b.out |> Array.to_list |> List.map (fun x -> `Float x))
-      );
+        `List
+          begin
+            b.out |> Array.to_list
+            |> List.map (fun x -> `Float x)
+          end );
     ]
 
 let from_json j =
@@ -196,4 +218,5 @@ let eval brain inp =
   }
 
 let out brain = Array.to_list brain.out
+
 let mem brain = Array.to_list brain.mem

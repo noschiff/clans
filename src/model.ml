@@ -71,9 +71,12 @@ type params = {
 type world = {
   params : params;
   cells : life option array array;
-  mutable steps : int; (* Global number of steps taken *)
-  mutable counter : int; (* Represents the id count *)
-  mutable bank : int; (* Global energy bank *)
+  mutable steps : int;
+  (* Global number of steps taken *)
+  mutable counter : int;
+  (* Represents the id count *)
+  mutable bank : int;
+  (* Global energy bank *)
   mutable queue : (int * int * int * int) list;
       (** An element in this list is of the form (x, y, id, s) where (x,
           y) is the position of the cell and [id] is the id, and [s] is
@@ -156,10 +159,12 @@ let to_json world =
     [
       ( "cells",
         `List
-          (world.cells
-          |> Array.map (fun x ->
-                 `List (x |> Array.map cell_to_json |> Array.to_list))
-          |> Array.to_list) );
+          begin
+            world.cells
+            |> Array.map (fun x ->
+                   `List (x |> Array.map cell_to_json |> Array.to_list))
+            |> Array.to_list
+          end );
       ( "params",
         `Assoc
           [
@@ -186,9 +191,11 @@ let to_json world =
       ("bank", `Int world.bank);
       ( "queue",
         `List
-          (world.queue
-          |> List.map (fun (x, y, i, s) ->
-                 `List [ `Int x; `Int y; `Int i; `Int s ])) );
+          begin
+            world.queue
+            |> List.map (fun (x, y, i, s) ->
+                   `List [ `Int x; `Int y; `Int i; `Int s ])
+          end );
       ("dim_x", `Int world.dim_x);
       ("dim_y", `Int world.dim_y);
     ]
@@ -290,9 +297,7 @@ let populate_random world d =
       let x, y = (Random.int world.dim_x, Random.int world.dim_y) in
       match random_life world x y with
       | exception InvalidWorldOperation _ -> ()
-      | _ ->
-          ();
-          p ()
+      | _ -> p ()
   in
   p ()
 
@@ -310,12 +315,13 @@ let calculate_brain_output world life =
     | _ -> 0.
   in
   Brain.out life.brain |> function
-  | [ dx; dy; h ] -> (
+  | [ dx; dy; h ] -> begin
       ( cutoff dx |> sign |> int_of_float,
         cutoff dy |> sign |> int_of_float,
         cutoff h |> function
         | x when x < 0. -> -1.
-        | x -> x ))
+        | x -> x )
+    end
   | _ -> raise (Invalid_argument "Brain output did not match.")
 
 let offsets =
@@ -353,10 +359,12 @@ let rec step world =
     else (
       life.brain <-
         Brain.eval life.brain
-          (property_of_offsets world x y (fun l ->
-               float_of_int l.energy /. float_of_int life.energy)
-          @ property_of_offsets world x y (fun l ->
-                ringdist l.nation life.nation));
+          begin
+            property_of_offsets world x y (fun l ->
+                float_of_int l.energy /. float_of_int life.energy)
+            @ property_of_offsets world x y (fun l ->
+                  ringdist l.nation life.nation)
+          end;
       let dx, dy, h = calculate_brain_output world life in
       let nx, ny = (x + dx, y + dy) in
       match get_cell world nx ny with
@@ -380,10 +388,11 @@ let rec step world =
               in
               let rec find_empt = function
                 | [] -> None
-                | (ox, oy) :: t -> (
+                | (ox, oy) :: t -> begin
                     match get_cell world (x + ox) (y + oy) with
                     | Some _ -> find_empt t
-                    | None -> Some (x + ox, y + oy))
+                    | None -> Some (x + ox, y + oy)
+                  end
               in
               (match shuffle offsets |> find_empt with
               | None -> () (* Failed to mate, no open space *)

@@ -1,8 +1,11 @@
 type t = float array array
 
 let create n m = Array.make_matrix n m 0.
+
 let of_list l = l |> List.map Array.of_list |> Array.of_list
+
 let to_list m = m |> Array.map Array.to_list |> Array.to_list
+
 let rows a = Array.length a
 
 let cols a =
@@ -11,8 +14,11 @@ let cols a =
   | _ -> Array.length a.(0)
 
 let dims a = (rows a, cols a)
+
 let row i a = a.(i) |> Array.to_list
+
 let col i a = a |> Array.map (fun x -> x.(i)) |> Array.to_list
+
 let get i j a = a.(i).(j)
 
 let transpose a =
