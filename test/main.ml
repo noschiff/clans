@@ -12,15 +12,7 @@ let print_list lst =
       | [ h ] -> acc ^ string_of_float h
       | h1 :: (h2 :: t as t') ->
           if n = 100 then acc ^ "..." (* stop printing long list *)
-          else
-            loop
-              begin
-                n + 1
-              end
-              begin
-                acc ^ string_of_float h1 ^ "; "
-              end
-              t'
+          else loop (n + 1) (acc ^ string_of_float h1 ^ "; ") t'
     in
     loop 0 "" lst
   in
@@ -156,12 +148,7 @@ let matrix_tests =
       assert_equal
         [ [ 6.; 2. ]; [ 2.; 0. ] ]
         begin
-          Matrix.map
-            begin
-              fun x ->
-              x *. 2.
-            end
-            test_matrix
+          Matrix.map (fun x -> x *. 2.) test_matrix
           |> Matrix.to_list
         end
         ~printer:print_matrix ~cmp:cmp_float_matrices );
@@ -174,16 +161,8 @@ let matrix_tests =
         ]
         begin
           Matrix.map
-            begin
-              fun x ->
-              if
-                cmp_float
-                  begin
-                    x /. 3.
-                  end 0.
-              then x *. x
-              else x -. 3.
-            end
+            (fun x ->
+              if cmp_float (x /. 3.) 0. then x *. x else x -. 3.)
             big_matrix
           |> Matrix.to_list
         end
@@ -193,41 +172,21 @@ let matrix_tests =
         [ [ 9.; 3. ]; [ 3.; 0. ] ]
         begin
           Matrix.map2
-            begin
-              fun x y ->
-              x +. y
-            end
+            (fun x y -> x +. y)
             test_matrix
-            (Matrix.map
-               begin
-                 fun x ->
-                 x *. 2.
-               end
-               test_matrix)
+            (Matrix.map (fun x -> x *. 2.) test_matrix)
           |> Matrix.to_list
         end
         ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Big matrix map and map2 equivalence test" >:: fun _ ->
       assert_equal
         begin
-          Matrix.map
-            begin
-              fun a ->
-              3. *. a
-            end
-            simple_big_matrix
+          Matrix.map (fun a -> 3. *. a) simple_big_matrix
           |> Matrix.to_list
         end
         begin
           Matrix.map2
-            begin
-              fun a b ->
-              begin
-                begin
-                  2. *. a
-                end +. b
-              end
-            end
+            (fun a b -> (2. *. a) +. b)
             simple_big_matrix simple_big_matrix
           |> Matrix.to_list
         end
@@ -241,19 +200,9 @@ let matrix_tests =
         ]
         begin
           Matrix.map2
-            begin
-              fun a b ->
-              if a *. b > 0. then
-                Float.round
-                  begin
-                    a +. b
-                  end
-              else
-                Float.round
-                  begin
-                    a -. b
-                  end
-            end
+            (fun a b ->
+              if a *. b > 0. then Float.round (a +. b)
+              else Float.round (a -. b))
             simple_big_matrix big_matrix
           |> Matrix.to_list
         end
@@ -265,10 +214,7 @@ let matrix_tests =
             ignore
               begin
                 Matrix.map2
-                  begin
-                    fun x y ->
-                    x +. y
-                  end
+                  (fun x y -> x +. y)
                   (Matrix.of_list
                      [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ])
                   (Matrix.of_list [ [ 3.; 1.; 2. ]; [ 2.; 4.; 2. ] ])
@@ -333,7 +279,7 @@ let model_tests =
         begin
           let world = Model.new_world 25 25 in
           Model.random_life world 5 5;
-          Model.get_cell world 5 5 != None
+          Model.get_cell world 5 5 <> None
         end );
     ( "Attempt to place cell outside of world boundaries. Should \
        normalize coords and place @ 1,1"
@@ -343,7 +289,7 @@ let model_tests =
           try
             let world = Model.new_world 25 25 in
             Model.random_life world 26 26;
-            Model.get_cell world 1 1 != None
+            Model.get_cell world 1 1 <> None
           with
           | Model.InvalidWorldOperation (5, 5) -> true
         end );
@@ -354,7 +300,7 @@ let model_tests =
             let world = Model.new_world 25 25 in
             Model.random_life world 5 5;
             Model.random_life world 5 5;
-            Model.get_cell world 5 5 != None
+            Model.get_cell world 5 5 <> None
           with
           | Model.InvalidWorldOperation (5, 5) -> true
         end );
@@ -363,9 +309,9 @@ let model_tests =
         begin
           let world = Model.new_world 25 25 in
           Model.random_life world 5 5;
-          if Model.get_cell world 5 5 != None then begin
+          if Model.get_cell world 5 5 <> None then begin
             Model.clear_cell world 5 5;
-            Model.get_cell world 5 5 == None
+            Model.get_cell world 5 5 = None
           end
           else false
         end );
@@ -376,7 +322,7 @@ let model_tests =
         begin
           let world = Model.new_world 25 25 in
           Model.clear_cell world 5 5;
-          Model.get_cell world 5 5 == None
+          Model.get_cell world 5 5 = None
         end );
     ( "Attempt to simulate with one life cell. Should not crash and \
        burn."
@@ -423,11 +369,11 @@ let model_tests =
           Model.random_life world 5 5;
           let world_json = Model.to_json world in
           let from_json_world = Model.of_json world_json in
-          if Model.get_cell world 5 5 == None then false
+          if Model.get_cell world 5 5 = None then false
           else
             let size = Model.get_size from_json_world in
             match size with
-            | x, y -> if x != 25 || y != 25 then false else true
+            | x, y -> x = 25 && y = 25
         end );
     ( "Attempt to convert cell into json, then into a world json."
     >:: fun _ ->
@@ -465,26 +411,15 @@ let controller_tests =
   [
     ( "Empty 1x1 world test" >:: fun _ ->
       Controller.save_to_file
-        begin
-          data_dir ^ "empty1x1.json"
-        end
-        begin
-          Controller.init @@ Model.new_world 1 1
-        end );
+        (data_dir ^ "empty1x1.json")
+        (Controller.init @@ Model.new_world 1 1) );
     ( "Cell 1x1 world test" >:: fun _ ->
       let state = Controller.init @@ Model.new_world 1 1 in
       Controller.random_cell state 0 0;
       Controller.step state;
-      Controller.save_to_file
-        begin
-          data_dir ^ "cell1x1.json"
-        end
-        state;
+      Controller.save_to_file (data_dir ^ "cell1x1.json") state;
       let nstate = Controller.init @@ Model.new_world 1 1 in
-      Controller.load_from_file nstate
-        begin
-          data_dir ^ "cell1x1.json"
-        end;
+      Controller.load_from_file nstate (data_dir ^ "cell1x1.json");
       assert_equal state nstate );
   ]
 
@@ -553,18 +488,27 @@ let brain_tests =
       ( "verify brain1 out after eval once " >:: fun _ ->
         assert_equal
           [ -0.176992260761; -0.62368718439; -0.247871067661 ]
-          (out (eval brain1 (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval brain1 |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify brain1 out after eval once with nonzero input"
       >:: fun _ ->
         assert_equal
           [ -0.819648121789; -0.302316725241; -0.982542297368 ]
-          (out (eval brain1 custom_nn_input))
+          begin
+            eval brain1 custom_nn_input
+            |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify brain2 out after eval once " >:: fun _ ->
         assert_equal
           [ 0.980041660881; 0.982346676272; -0.999987950676 ]
-          (out (eval brain2 (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval brain2 |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify brain1 mem after eval once " >:: fun _ ->
         assert_equal
@@ -575,7 +519,10 @@ let brain_tests =
             0.64740625151;
             0.997570951552;
           ]
-          (mem (eval brain1 (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval brain1 |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify brain1 mem after eval once with nonzero input"
       >:: fun _ ->
@@ -587,7 +534,10 @@ let brain_tests =
             0.892021834837;
             0.403483291783;
           ]
-          (mem (eval brain1 custom_nn_input))
+          begin
+            eval brain1 custom_nn_input
+            |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify brain2 mem after eval once " >:: fun _ ->
         assert_equal
@@ -598,7 +548,10 @@ let brain_tests =
             -0.99930975995;
             0.988446020584;
           ]
-          (mem (eval brain2 (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval brain2 |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
     ]
   in
@@ -618,18 +571,27 @@ let brain_tests =
           ~printer:print_brain );
       ( "mutate memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ]
-          (mem (mutate default_params brain1))
+          begin
+            mutate default_params brain1
+            |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "mutate output initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0. ]
-          (out (mutate default_params brain1))
+          begin
+            mutate default_params brain1
+            |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "eval brain1 mutated param=0 " >:: fun _ ->
         assert_equal
           [ 0.896572344798; 0.896572344798; 0.896572344798 ]
           begin
             let mutated = mutate ~r:0. ~g:0.25 default_params brain1 in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "eval brain1 mutated param=swap_chance " >:: fun _ ->
@@ -640,7 +602,10 @@ let brain_tests =
               mutate ~r:default_params.swap_chance ~g:0.25
                 default_params brain1
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "brain1 mutated param=swap_chance equals param=a little above \
@@ -650,10 +615,7 @@ let brain_tests =
           begin
             Random.init random_env;
             mutate
-              ~r:
-                begin
-                  default_params.swap_chance +. 0.001
-                end
+              ~r:(default_params.swap_chance +. 0.001)
               default_params brain1
           end
           begin
@@ -669,20 +631,23 @@ let brain_tests =
             Random.init random_env;
             let mutated =
               mutate
-                ~r:
-                  begin
-                    default_params.swap_chance +. 0.001
-                  end
+                ~r:(default_params.swap_chance +. 0.001)
                 default_params brain1
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           begin
             Random.init random_env;
             let mutated =
               mutate ~r:default_params.swap_chance default_params brain1
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "brain1 mutated param=1 equals param=1 - swap_chance - \
@@ -697,10 +662,8 @@ let brain_tests =
             Random.init random_env;
             mutate
               ~r:
-                begin
-                  1. -. default_params.swap_chance
-                -. default_params.mutate_chance
-                end
+                (1. -. default_params.swap_chance
+               -. default_params.mutate_chance)
               default_params brain1
           end
           ~printer:print_brain );
@@ -711,20 +674,24 @@ let brain_tests =
           begin
             Random.init random_env;
             let mutated = mutate ~r:1. default_params brain1 in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           begin
             Random.init random_env;
             let mutated =
               mutate
                 ~r:
-                  begin
-                    1. -. default_params.swap_chance
-                  -. default_params.mutate_chance
-                  end
+                  (1. -. default_params.swap_chance
+                 -. default_params.mutate_chance)
                 default_params brain1
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "brain1 mutated param=0 equals param=a little below swap_chance"
@@ -733,10 +700,7 @@ let brain_tests =
           begin
             Random.init random_env;
             mutate
-              ~r:
-                begin
-                  default_params.swap_chance -. 0.001
-                end
+              ~r:(default_params.swap_chance -. 0.001)
               default_params brain1
           end
           begin
@@ -752,18 +716,21 @@ let brain_tests =
             Random.init random_env;
             let mutated =
               mutate
-                ~r:
-                  begin
-                    default_params.swap_chance -. 0.001
-                  end
+                ~r:(default_params.swap_chance -. 0.001)
                 default_params brain1
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           begin
             Random.init random_env;
             let mutated = mutate ~r:0. default_params brain1 in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "eval out repeated mutation brain1 param=swap_chance, varying \
@@ -775,15 +742,16 @@ let brain_tests =
           begin
             let mutated =
               List.fold_left
-                begin
-                  fun b g ->
+                (fun b g ->
                   mutate ~r:default_params.swap_chance ~g default_params
-                    b
-                end
+                    b)
                 brain1
                 [ -0.1; 0.1; 0.25; 0.2 ]
             in
-            out (eval mutated (List.init 18 (fun _ -> 0.)))
+            begin
+              (fun _ -> 0.)
+              |> List.init 18 |> eval mutated |> out
+            end
           end
           ~printer:print_list ~cmp:cmp_float_lists );
     ]
@@ -808,13 +776,19 @@ let brain_tests =
       ( "verify mated out after eval once " >:: fun _ ->
         assert_equal
           [ 0.98683663704; -0.2757826989; -0.947449814467 ]
-          (out (eval mated (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval mated |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify mated out after eval once with nonzero input"
       >:: fun _ ->
         assert_equal
           [ 0.942906688766; 0.521738867995; 0.4997127204 ]
-          (out (eval mated custom_nn_input))
+          begin
+            eval mated custom_nn_input
+            |> out
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify mated mem after eval once " >:: fun _ ->
         assert_equal
@@ -825,7 +799,10 @@ let brain_tests =
             -0.992857458514;
             0.710970493196;
           ]
-          (mem (eval mated (List.init 18 (fun _ -> 0.))))
+          begin
+            (fun _ -> 0.)
+            |> List.init 18 |> eval mated |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
       ( "verify mated mem after eval once with nonzero input"
       >:: fun _ ->
@@ -837,7 +814,10 @@ let brain_tests =
             -0.613391503121;
             0.623319530889;
           ]
-          (mem (eval mated custom_nn_input))
+          begin
+            eval mated custom_nn_input
+            |> mem
+          end
           ~printer:print_list ~cmp:cmp_float_lists );
     ]
   in
