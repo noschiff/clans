@@ -358,7 +358,7 @@ let model_tests =
           | None -> false
           | Some l ->
               Model.set_cell world 6 6 l;
-              Model.get_cell world 6 6 != None
+              Model.get_cell world 6 6 <> None
         end );
     ( "Attempt to convert world into json, then from json, then check \
        for proper dimensions and cell existence"
@@ -662,8 +662,10 @@ let brain_tests =
             Random.init random_env;
             mutate
               ~r:
-                (1. -. default_params.swap_chance
-               -. default_params.mutate_chance)
+                begin
+                  1. -. default_params.swap_chance
+                -. default_params.mutate_chance
+                end
               default_params brain1
           end
           ~printer:print_brain );
@@ -684,8 +686,10 @@ let brain_tests =
             let mutated =
               mutate
                 ~r:
-                  (1. -. default_params.swap_chance
-                 -. default_params.mutate_chance)
+                  begin
+                    1. -. default_params.swap_chance
+                  -. default_params.mutate_chance
+                  end
                 default_params brain1
             in
             begin

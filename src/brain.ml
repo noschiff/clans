@@ -50,11 +50,14 @@ let gaussian () =
   sqrt (-2. *. log x) *. cos (2. *. Float.pi *. y)
 
 let normal ?g m s =
-  (match g with
-  | None -> gaussian ()
-  | Some x -> x)
-  *. s
-  +. m
+  begin
+    begin
+      match g with
+      | None -> gaussian ()
+      | Some x -> x
+    end
+    |> ( *. ) s |> ( +. ) m
+  end
 
 (** Creates an mxn matrix with normal random distributed numbers *)
 let normal_matrix n m =
