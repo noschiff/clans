@@ -195,9 +195,24 @@ function openWorldFile() {
     var file = input.files[0];
     const reader = new FileReader();
     reader.onload = event => {
-      console.log("JSON Content: \n" + event.target.result);
+      fetch('http://localhost:3000/load', {
+        method: 'POST',
+        body: JSON.stringify({
+          world: event.target.result
+        })
+      }).then(response => {
+        console.log(response);
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Not OK");
+      }).then(data => {
+        renderWorld(data);
 
-      // TODO: Do something with this World file...
+      })
+        .catch(reason => {
+          console.log("Could not get info from http://localhost:3000/load. Error: " + reason)
+        });
     }
     reader.onerror = error => reject(error)
     reader.readAsText(file);
@@ -216,7 +231,22 @@ function renderWorld(data) {
       world.setCell(x, y, Object.assign(world.getCell(x, y), cellRow[y]));
     }
   }
+  world.data = data;
   renderCanvas(ctx);
+}
+
+const jsonData = {
+  name: "Jonth",
+  email: "jobtd@mail.com",
+  website: "www.4codev.com"
+};
+
+function downloadWorld() {
+  const a = document.createElement("a");
+  const file = new Blob([JSON.stringify(world.data)], { type: "text/plain" });
+  a.href = URL.createObjectURL(file);
+  a.download = "clans_world.json";
+  a.click();
 }
 
 /**

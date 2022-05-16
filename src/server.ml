@@ -30,7 +30,7 @@ let post name (push : t) req =
 let init (push : t) =
   App.empty |> App.port 3000
   |> (fun x ->
-       [ "update_cell"; "step"; "populate" ]
+       [ "update_cell"; "step"; "populate"; "load" ]
        |> List.fold_left
             (fun acc s -> App.post ("/" ^ s) (post s push) acc)
             x)

@@ -56,6 +56,13 @@ let handle_post_request (req, json, callback) : 'a Lwt.t =
       |> to_float
       |> Controller.populate_world state;
       Controller.get_json false state;
+    | "load" ->
+        json 
+        |> to_assoc 
+        |> List.assoc "world" 
+        |> to_string
+        |> Controller.load_from_string state;
+        Controller.get_json false state;
     | _ ->
        if debug then print_endline "invalid request";
        Controller.get_json false state

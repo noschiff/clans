@@ -5,6 +5,7 @@ class World {
     this.height = height;
 
     this.cellArray = new Array(height);
+    this.data = undefined;
     for (let i = 0; i < height; i++) {
       var widthArray = new Array(width);
       for (let j = 0; j < width; j++) {
@@ -58,6 +59,4 @@ class World {
   isInBounds(x, y) {
     return x > -1 && y > -1 && x < world.getWidth() && y < world.getHeight();
   }
-
-  // TODO: Create a method that loads in the world file from a JSON
 }
