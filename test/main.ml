@@ -3,9 +3,8 @@ open Clans
 
 let data_dir = "data/test/"
 
-(** [pp_list pp_elt lst] pretty-prints list [lst], using [pp_elt] to
-    pretty-print each element of [lst]. Adapted from Cornell CS 3110 A2
-    Code *)
+(** [print_list lst] pretty-prints float list [lst]. Adapted from
+    Cornell CS 3110 A2 Code *)
 let print_list lst =
   let pp_elts lst =
     let rec loop n acc = function
@@ -19,6 +18,7 @@ let print_list lst =
   in
   "[" ^ pp_elts lst ^ "]"
 
+(** [print_matrix m] pretty-prints float list list [m]. *)
 let print_matrix (m : float list list) : string =
   let rec p m =
     match m with
@@ -29,6 +29,7 @@ let print_matrix (m : float list list) : string =
   | [ [] ] -> "[[]]"
   | x -> "[" ^ p x ^ "]"
 
+(** [print_brain b] pretty-prints brain [b] as a string of a json*)
 let print_brain b = b |> Brain.to_json |> Yojson.Safe.to_string
 
 let cmp_float_lists l1 l2 =
@@ -54,7 +55,11 @@ let dim_matrix = Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ]
 
 let simple_big_matrix =
   Matrix.of_list
-    [ [ 3.; -1.; -10.; 2. ]; [ 1.; 0.; 6.; 2. ]; [ -7.; 8.; 4.; 0. ] ]
+    [
+      [ 3.; -1.; -10.; -2. ];
+      [ -1.; 0.; 16.; -2. ];
+      [ -7.; 8.; 14.; 0. ];
+    ]
 
 let big_matrix =
   Matrix.of_list
@@ -147,9 +152,9 @@ let matrix_tests =
     ( "Big matrix map2 test" >:: fun _ ->
       assert_equal
         [
-          [ 12.; -10.; -15.; 2. ];
-          [ 35.; 4.; 8.; 2. ];
-          [ -7.; 14.; 81.; -1. ];
+          [ 12.; -10.; -15.; -2. ];
+          [ -35.; 4.; 18.; -2. ];
+          [ -7.; 14.; 91.; -1. ];
         ]
         (Matrix.map2
            (fun a b ->
