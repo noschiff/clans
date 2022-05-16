@@ -52,6 +52,10 @@ let cmp_float_matrices l1 l2 =
 let test_matrix = Matrix.of_list [ [ 3.; 1. ]; [ 1.; 0. ] ]
 let dim_matrix = Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ]
 
+let simple_big_matrix =
+  Matrix.of_list
+    [ [ 3.; -1.; -10.; 2. ]; [ 1.; 0.; 6.; 2. ]; [ -7.; 8.; 4.; 0. ] ]
+
 let big_matrix =
   Matrix.of_list
     [
@@ -110,7 +114,7 @@ let matrix_tests =
         [ [ 6.; 2. ]; [ 2.; 0. ] ]
         (Matrix.map (fun x -> x *. 2.) test_matrix |> Matrix.to_list)
         ~printer:print_matrix ~cmp:cmp_float_matrices );
-    ( "Complex matrix map test" >:: fun _ ->
+    ( "Big float arithmetic matrix map test" >:: fun _ ->
       assert_equal
         [
           [ 6.; 5.8; 1.5; -2.9 ];
@@ -129,6 +133,29 @@ let matrix_tests =
            (fun x y -> x +. y)
            test_matrix
            (Matrix.map (fun x -> x *. 2.) test_matrix)
+        |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
+    ( "Big matrix map and map2 equivalence test" >:: fun _ ->
+      assert_equal
+        (Matrix.map (fun a -> 3. *. a) simple_big_matrix
+        |> Matrix.to_list)
+        (Matrix.map2
+           (fun a b -> (2. *. a) +. b)
+           simple_big_matrix simple_big_matrix
+        |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
+    ( "Big matrix map2 test" >:: fun _ ->
+      assert_equal
+        [
+          [ 12.; -10.; -15.; 2. ];
+          [ 35.; 4.; 8.; 2. ];
+          [ -7.; 14.; 81.; -1. ];
+        ]
+        (Matrix.map2
+           (fun a b ->
+             if a *. b > 0. then Float.round (a +. b)
+             else Float.round (a -. b))
+           simple_big_matrix big_matrix
         |> Matrix.to_list)
         ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Attempt map2 on unequal matrix dimensions." >:: fun _ ->
@@ -358,9 +385,10 @@ let brain_tests =
           brain2 ~printer:print_brain );
       ( "memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem brain1)
-          ~printer:print_list );
+          ~printer:print_list ~cmp:cmp_float_lists );
       ( "output initially empty" >:: fun _ ->
-        assert_equal [ 0.; 0.; 0. ] (out brain1) ~printer:print_list );
+        assert_equal [ 0.; 0.; 0. ] (out brain1) ~printer:print_list
+          ~cmp:cmp_float_lists );
       ( "verify brain1 out after eval once " >:: fun _ ->
         assert_equal
           [ -0.176992260761; -0.62368718439; -0.247871067661 ]
@@ -426,11 +454,11 @@ let brain_tests =
       ( "mutate memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ]
           (mem (mutate default_params brain1))
-          ~printer:print_list );
+          ~printer:print_list ~cmp:cmp_float_lists );
       ( "mutate output initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0. ]
           (out (mutate default_params brain1))
-          ~printer:print_list );
+          ~printer:print_list ~cmp:cmp_float_lists );
       ( "eval brain1 mutated param=0 " >:: fun _ ->
         assert_equal
           [ 0.896572344798; 0.896572344798; 0.896572344798 ]
@@ -529,6 +557,22 @@ let brain_tests =
            let mutated = mutate ~r:0. default_params brain1 in
            out (eval mutated (List.init 18 (fun _ -> 0.))))
           ~printer:print_list ~cmp:cmp_float_lists );
+      ( "eval out repeated mutation brain1 param=swap_chance, varying \
+         gaussians"
+      >:: (* param will cause gaussian value to matter *)
+      fun _ ->
+        assert_equal
+          [ 0.999995490482; -0.498309769503; 0.999865293139 ]
+          (let mutated =
+             List.fold_left
+               (fun b g ->
+                 mutate ~r:default_params.swap_chance ~g default_params
+                   b)
+               brain1
+               [ -0.1; 0.1; 0.25; 0.2 ]
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
     ]
   in
 
@@ -542,9 +586,10 @@ let brain_tests =
           mated ~printer:print_brain );
       ( "mated memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem mated)
-          ~printer:print_list );
+          ~printer:print_list ~cmp:cmp_float_lists );
       ( "mated output initially empty" >:: fun _ ->
-        assert_equal [ 0.; 0.; 0. ] (out mated) ~printer:print_list );
+        assert_equal [ 0.; 0.; 0. ] (out mated) ~printer:print_list
+          ~cmp:cmp_float_lists );
       ( "verify mated out after eval once " >:: fun _ ->
         assert_equal
           [ 0.98683663704; -0.2757826989; -0.947449814467 ]
