@@ -8,6 +8,10 @@ var selectedCell = undefined;
 
 var canvas = document.getElementById("sheet");
 var ctx = canvas.getContext("2d");
+let simulationButton = document.getElementById("btnRunSimulation");
+let simulationSpeed = document.getElementById("txtFps");
+let simulationTimer = undefined;
+
 /**
  * Sets the highlighted cell, creating a + shape at its coordinates.
  * @param {CanvasRenderingContext2D} canvasContext 
@@ -203,6 +207,8 @@ function openWorldFile() {
 }
 
 function renderWorld(data) {
+  console.log(data);
+
   for (let x = 0; x < data.world.cells.length; x++) {
 
     var cellRow = data.world.cells[x];
@@ -242,13 +248,29 @@ function stepSimulation(stepCount, fullWorld) {
     });
 }
 
+function runSimulation() {
+  if (simulationTimer != undefined) {
+    clearInterval(simulationTimer);
+    simulationTimer = undefined;
+    simulationSpeed.disabled = false;
+    simulationButton.innerHTML = "Run Simulation";
+  } else {
+    stepSimulation(1, false);
+    simulationTimer = setInterval(function () {
+      stepSimulation(1, false);
+    }, 1000 / simulationSpeed.value);
+    simulationSpeed.disabled = true;
+    simulationButton.innerHTML = "Stop Simulation";
+  }
+}
+
 function postCellInformation(data) {
   console.log(JSON.stringify(data));
   fetch('http://localhost:3000/update_cell', {
     method: 'POST',
     body: JSON.stringify(data)
   }).then(response => {
-    console.log(response);
+
     if (response.ok) {
       return response.json();
     }
@@ -330,7 +352,7 @@ window.onload = function () {
       y: selectedCell.y,
       type: "life",
       energy: selectedCell.energy,
-      nation: 0.5
+      nation: selectedCell.nation
     }));
 
     updateCellInformation();

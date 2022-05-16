@@ -47,7 +47,7 @@ class Cell {
       case "wall":
         return "#000000";
       case "life":
-        return "#00FF00";
+        return "#" + Math.floor(this.nation * 16777215).toString(16)
     }
   }
 }

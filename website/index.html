@@ -57,18 +57,22 @@
         <h2>Control Panel</h2>
 
         <label for="fname">Frames Per Second:</label>
-        <input type="number" id="txtFps">
+        <input type="number" id="txtFps" max="30" min="1"
+          oninput="this.value = Math.round(Math.min(30, Math.max(1, this.value)));" value="1">
 
         <button id="btnEditCell" type="button" class="btn btn-primary" disabled="true" data-bs-toggle="modal"
           data-bs-target="#modEditCell">Edit Cell</button>
         <hr />
-        <button id="myBtn" type="button" onclick="stepSimulation(1, false)" class="btn btn-success">Step
+        <button type="button" onclick="stepSimulation(1, false)" class="btn btn-success">Step
           Simulation</button>
-        <button id="myBtn" type="button" onclick="populate()" class="btn btn-success">Populate</button>
+        <button id="btnRunSimulation" type="button" onclick="runSimulation()" class="btn btn-success">Run
+          Simulation</button>
+        <button type="button" onclick="populate()" class="btn btn-primary">Populate</button>
 
       </div>
       <div id="border" class="col">
         Main Screen
+        <br />
         <canvas id="sheet" width="400" height="400"></canvas>
       </div>
       <div class="col">
