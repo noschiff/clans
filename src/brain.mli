@@ -43,14 +43,13 @@ val combine : float -> t -> t -> t
 (** [combine p a b] combines the networks [a] and [b] with a weight of
     [p] on [a] and [1-p] on [b]. **)
 
-val deterministic_mutate : float -> mut_params -> t -> t
-(** [mutate r p b] creates and returns a new brain after mutating the
-    weights according to the decision represented by [r]. Preconditions:
-    r is in [0, 1]. **)
-
-val mutate : mut_params -> t -> t
-(** [mutate p b] creates and returns a new brain after mutating the
-    weights. **)
+val mutate : ?r:float -> ?g:float -> mut_params -> t -> t
+(** [mutate r g p b] creates and returns a new brain after mutating the
+    weights. r is an optional parameter that determines which form of
+    mutation will occur. g is an optional argument for a normally
+    distrubuted random variable. If left blank, r and g will be
+    generated randomly. Preconditions: r is in [0, 1], g is a legal
+    float for a normal distribution. **)
 
 val to_json : t -> Yojson.Safe.t
 (** [from_json brain] converts [brain] into json. **)

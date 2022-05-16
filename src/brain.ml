@@ -49,7 +49,7 @@ let gaussian () =
   let x, y = (Random.float 1., Random.float 1.) in
   sqrt (-2. *. log x) *. cos (2. *. Float.pi *. y)
 
-let normal m s = (gaussian () *. s) +. m
+let normal ?g m s = ((match g with | None -> gaussian () | Some x -> x) *. s) +. m
 
 (** Creates an mxn matrix with normal random distributed numbers *)
 let normal_matrix n m =
@@ -99,14 +99,21 @@ let combine p a b =
     out = Array.make (Array.length b.out) 0.;
   }
 
-let deterministic_mutate r p b =
+let mutate ?r ?g p b =
   let mutv v =
-    match r with
+    match
+      match r with
+      | None -> Random.float 1.
+      | Some x -> x
+    with
     | c when c < 0. -> failwith "Invalid float"
-    | c when 0. <= c && c < p.swap_chance -> gaussian ()
+    | c when 0. <= c && c < p.swap_chance -> (
+        match g with
+        | Some x -> x
+        | None -> gaussian ())
     | c when p.swap_chance <= c && c < p.swap_chance +. p.mutate_chance
       ->
-        v +. normal 0. p.mutate_stdev
+        v +. normal ?g:g 0. p.mutate_stdev
     | _ -> v
   in
   let mutm a = a |> Matrix.map mutv in
@@ -116,8 +123,6 @@ let deterministic_mutate r p b =
     mem = Array.make (Array.length b.mem) 0.;
     out = Array.make (Array.length b.out) 0.;
   }
-
-let mutate p b = deterministic_mutate (Random.float 1.) p b
 
 let matrix_to_json m =
   `List
