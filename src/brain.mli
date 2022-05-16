@@ -4,23 +4,21 @@ type t
 (** Type representing a neural net *)
 
 type mut_params = {
-  swap_chance: float;
-  (** chance to completely change a given weight
-    into a new value
-    (default 0.005)
+  swap_chance : float;
+      (** chance to completely change a given weight into a new value
+          (default 0.005)
 
-    Requires: [0 <= swap_chance < 1] **)
-  mutate_chance: float;
-  (** chance to mutate a given weight 
-    by adding a random normal variable to it
-    (default 0.02)
+          Requires: [0 <= swap_chance < 1] **)
+  mutate_chance : float;
+      (** chance to mutate a given weight by adding a random normal
+          variable to it (default 0.02)
 
-    Requires: [0 <= mutate_chance < 1] **)
-  mutate_stdev: float;
-  (** standard deviation of the normal variable to add to
-    the weight (default 1) 
+          Requires: [0 <= mutate_chance < 1] **)
+  mutate_stdev : float;
+      (** standard deviation of the normal variable to add to the weight
+          (default 1)
 
-    Requires: [0 < mutate_stdev] **)
+          Requires: [0 < mutate_stdev] **)
 }
 
 val default_params : mut_params
@@ -42,11 +40,16 @@ val create : int -> int -> int -> int list -> t
     distrbution with stdev 1, mean 0. *)
 
 val combine : float -> t -> t -> t
-(** [combine p a b] combines the networks [a] and [b] with a weight
-    of [p] on [a] and [1-p] on [b]. **)
+(** [combine p a b] combines the networks [a] and [b] with a weight of
+    [p] on [a] and [1-p] on [b]. **)
+
+val deterministic_mutate : float -> mut_params -> t -> t
+(** [mutate r p b] creates and returns a new brain after mutating the
+    weights according to the decision represented by [r]. Preconditions:
+    r is in [0, 1]. **)
 
 val mutate : mut_params -> t -> t
-(** [mutate p b] creates and returns a new brain after mutating the 
+(** [mutate p b] creates and returns a new brain after mutating the
     weights. **)
 
 val to_json : t -> Yojson.Safe.t
