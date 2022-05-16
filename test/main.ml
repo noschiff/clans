@@ -19,10 +19,15 @@ let print_list lst =
   in
   "[" ^ pp_elts lst ^ "]"
 
-let rec print_matrix (m : float list list) : string =
+let print_matrix (m : float list list) : string =
+  let rec p m =
+    match m with
+    | [] -> ""
+    | h :: t -> print_list h ^ ";\n" ^ p t
+  in
   match m with
-  | [] -> "[ [] ]"
-  | h :: t -> "[" ^ print_list h ^ "]\n" ^ print_matrix t
+  | [ [] ] -> "[[]]"
+  | x -> "[" ^ p x ^ "]"
 
 let print_brain b = b |> Brain.to_json |> Yojson.Safe.to_string
 
@@ -35,8 +40,25 @@ let cmp_float_lists l1 l2 =
   in
   cmp l1 l2
 
+let cmp_float_matrices l1 l2 =
+  let rec cmp a b =
+    match (a, b) with
+    | [], [] -> true
+    | h1 :: t1, h2 :: t2 -> cmp_float_lists h1 h2 && cmp t1 t2
+    | _ -> failwith "matrices must have equal sizes"
+  in
+  cmp l1 l2
+
 let test_matrix = Matrix.of_list [ [ 3.; 1. ]; [ 1.; 0. ] ]
 let dim_matrix = Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ]
+
+let big_matrix =
+  Matrix.of_list
+    [
+      [ 9.; 8.8; 4.5; 0.1 ];
+      [ -34.; -4.4; -2.; -0.1 ];
+      [ 0.2; 6.; -77.; 0.9 ];
+    ]
 
 let matrix_tests =
   [
@@ -44,14 +66,14 @@ let matrix_tests =
       assert_equal
         [ [ 3.; 1. ]; [ 1.; 0. ] ]
         (Matrix.of_list [ [ 3.; 1. ]; [ 1.; 0. ] ] |> Matrix.to_list)
-        ~printer:print_matrix );
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Matrix creation test" >:: fun _ ->
       assert_equal
         [
           [ 0.; 0.; 0. ]; [ 0.; 0.; 0. ]; [ 0.; 0.; 0. ]; [ 0.; 0.; 0. ];
         ]
         (Matrix.create 4 3 |> Matrix.to_list)
-        ~printer:print_matrix );
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Matrix dimensions" >:: fun _ ->
       assert_equal (4, 3) (Matrix.create 4 3 |> Matrix.dims) );
     ( "Get Matrix row" >:: fun _ ->
@@ -71,7 +93,7 @@ let matrix_tests =
            (Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ])
            (Matrix.of_list [ [ 3.; 1.; 2. ]; [ 2.; 4.; 2. ] ])
         |> Matrix.to_list)
-        ~printer:print_matrix );
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Attempt dot product on invalid dot matrices." >:: fun _ ->
       assert_bool "didn't raise"
         (try
@@ -87,7 +109,19 @@ let matrix_tests =
       assert_equal
         [ [ 6.; 2. ]; [ 2.; 0. ] ]
         (Matrix.map (fun x -> x *. 2.) test_matrix |> Matrix.to_list)
-        ~printer:print_matrix );
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
+    ( "Complex matrix map test" >:: fun _ ->
+      assert_equal
+        [
+          [ 6.; 5.8; 1.5; -2.9 ];
+          [ -37.; -7.4; -5.; -3.1 ];
+          [ -2.8; 3.; -80.; -2.1 ];
+        ]
+        (Matrix.map
+           (fun x -> if cmp_float (x /. 3.) 0. then x *. x else x -. 3.)
+           big_matrix
+        |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Matrix map2 test" >:: fun _ ->
       assert_equal
         [ [ 9.; 3. ]; [ 3.; 0. ] ]
@@ -96,7 +130,7 @@ let matrix_tests =
            test_matrix
            (Matrix.map (fun x -> x *. 2.) test_matrix)
         |> Matrix.to_list)
-        ~printer:print_matrix );
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Attempt map2 on unequal matrix dimensions." >:: fun _ ->
       assert_bool "didn't raise"
         (try
@@ -113,10 +147,27 @@ let matrix_tests =
       assert_equal
         [ [ 1.; 4. ]; [ 2.; 5. ]; [ 3.; 6. ] ]
         (Matrix.of_list [ [ 1.; 2.; 3. ]; [ 4.; 5.; 6. ] ]
-        |> Matrix.transpose |> Matrix.to_list) );
+        |> Matrix.transpose |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
     ( "Transpose empty Matrix for case coverage." >:: fun _ ->
       assert_equal []
-        (Matrix.of_list [ [] ] |> Matrix.transpose |> Matrix.to_list) );
+        (Matrix.of_list [ [] ] |> Matrix.transpose |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
+    ( "Large matrix dot" >:: fun _ ->
+      assert_equal
+        [
+          [ -85.; -40.2; 781.; -8.95 ];
+          [ 124.5; 87.12; 44.25; 1.05 ];
+          [ -99.74; -61.56; 826.1; -9.77 ];
+        ]
+        (Matrix.dot
+           (Matrix.of_list
+              [
+                [ 4.; 3.5; -10. ]; [ 9.3; -1.2; 0. ]; [ 2.; 3.4; -10.7 ];
+              ])
+           big_matrix
+        |> Matrix.to_list)
+        ~printer:print_matrix ~cmp:cmp_float_matrices );
   ]
 
 let model_tests =
@@ -256,222 +307,282 @@ let controller_tests =
 (* control randomness for testing purposes*)
 let random_env = 539748
 
-(* uses deterministic nature of Random to always test the same Brain *)
-let brain1 =
-  let () = Random.init 1 in
-  Brain.create 18 3 5 [ 10; 10; 5 ]
-(* "test/brain1.json" |> Yojson.Safe.from_file |> Brain.from_json *)
-
-let brain2 =
-  let () = Random.init 2 in
-  Brain.create 18 3 5 [ 10; 10; 5 ]
-
-let custom_nn_input =
-  [
-    -1.;
-    1.;
-    -1.;
-    0.;
-    1.;
-    0.;
-    -1.;
-    0.;
-    0.;
-    1.;
-    -1.;
-    0.;
-    -1.;
-    1.;
-    -1.;
-    0.;
-    1.;
-    0.;
-  ]
-
 let brain_tests =
   let open Brain in
-  [
-    ( "test brain1 creation" >:: fun _ ->
-      assert_equal
-        ("test/brain1.json" |> Yojson.Safe.from_file |> Brain.from_json)
-        brain1 ~printer:print_brain );
-    ( "test brain2 creation" >:: fun _ ->
-      assert_equal
-        ("test/brain2.json" |> Yojson.Safe.from_file |> Brain.from_json)
-        brain2 ~printer:print_brain );
-    ( "memory initially empty" >:: fun _ ->
-      assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem brain1)
-        ~printer:print_list );
-    ( "output initially empty" >:: fun _ ->
-      assert_equal [ 0.; 0.; 0. ] (out brain1) ~printer:print_list );
-    ( "verify brain1 out after eval once " >:: fun _ ->
-      assert_equal
-        [ -0.176992260761; -0.62368718439; -0.247871067661 ]
-        (out (eval brain1 (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "verify brain1 out after eval once with nonzero input" >:: fun _ ->
-      assert_equal
-        [ -0.819648121789; -0.302316725241; -0.982542297368 ]
-        (out (eval brain1 custom_nn_input))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "verify brain2 out after eval once " >:: fun _ ->
-      assert_equal
-        [ 0.980041660881; 0.982346676272; -0.999987950676 ]
-        (out (eval brain2 (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "verify brain1 mem after eval once " >:: fun _ ->
-      assert_equal
-        [
-          -0.536795060272;
-          -0.0363876789966;
-          0.980027277103;
-          0.64740625151;
-          0.997570951552;
-        ]
-        (mem (eval brain1 (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "verify brain1 mem after eval once with nonzero input" >:: fun _ ->
-      assert_equal
-        [
-          -0.998644873668;
-          -0.592763477777;
-          0.469106736655;
-          0.892021834837;
-          0.403483291783;
-        ]
-        (mem (eval brain1 custom_nn_input))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "verify brain2 mem after eval once " >:: fun _ ->
-      assert_equal
-        [
-          -0.992130005065;
-          -0.19658285145;
-          -0.434309339932;
-          -0.99930975995;
-          0.988446020584;
-        ]
-        (mem (eval brain2 (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "test mutated brain creation" >:: fun _ ->
-      assert_equal
-        ("test/mutated1.json" |> Yojson.Safe.from_file
-       |> Brain.from_json)
-        (Random.init random_env;
-         mutate ~r:0. default_params brain1)
-        ~printer:print_brain );
-    ( "mutate memory initially empty" >:: fun _ ->
-      assert_equal [ 0.; 0.; 0.; 0.; 0. ]
-        (mem (mutate default_params brain1))
-        ~printer:print_list );
-    ( "mutate output initially empty" >:: fun _ ->
-      assert_equal [ 0.; 0.; 0. ]
-        (out (mutate default_params brain1))
-        ~printer:print_list );
-    ( "eval brain1 mutated param=0 " >:: fun _ ->
-      assert_equal
-        [ 0.896572344798; 0.896572344798; 0.896572344798 ]
-        (let mutated = mutate ~r:0. ~g:0.25 default_params brain1 in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "eval brain1 mutated param=swap_chance " >:: fun _ ->
-      assert_equal
-        [ 0.999909913634; -0.462594099587; 0.995201312081 ]
-        (let mutated =
-           mutate ~r:default_params.swap_chance ~g:0.25 default_params
-             brain1
-         in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "brain1 mutated param=swap_chance equals param=a little above \
-       swap_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         mutate
-           ~r:(default_params.swap_chance +. 0.001)
-           default_params brain1)
-        (Random.init random_env;
-         mutate ~r:default_params.swap_chance default_params brain1)
-        ~printer:print_brain );
-    ( "eval brain1 mutated param=swap_chance equals param=a little \
-       above swap_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         let mutated =
+  let brain1 =
+    (* uses deterministic nature of Random to always test same Brain *)
+    let () = Random.init 1 in
+    Brain.create 18 3 5 [ 10; 10; 5 ]
+  in
+
+  let brain2 =
+    (* uses deterministic nature of Random to always test same Brain *)
+    let () = Random.init 2 in
+    Brain.create 18 3 5 [ 10; 10; 5 ]
+  in
+
+  let custom_nn_input =
+    [
+      -1.;
+      1.;
+      -1.;
+      0.;
+      1.;
+      0.;
+      -1.;
+      0.;
+      0.;
+      1.;
+      -1.;
+      0.;
+      -1.;
+      1.;
+      -1.;
+      0.;
+      1.;
+      0.;
+    ]
+  in
+
+  let basic_brains =
+    [
+      ( "test brain1 creation" >:: fun _ ->
+        assert_equal
+          ("test/brain1.json" |> Yojson.Safe.from_file
+         |> Brain.from_json)
+          brain1 ~printer:print_brain );
+      ( "test brain2 creation" >:: fun _ ->
+        assert_equal
+          ("test/brain2.json" |> Yojson.Safe.from_file
+         |> Brain.from_json)
+          brain2 ~printer:print_brain );
+      ( "memory initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem brain1)
+          ~printer:print_list );
+      ( "output initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0. ] (out brain1) ~printer:print_list );
+      ( "verify brain1 out after eval once " >:: fun _ ->
+        assert_equal
+          [ -0.176992260761; -0.62368718439; -0.247871067661 ]
+          (out (eval brain1 (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify brain1 out after eval once with nonzero input"
+      >:: fun _ ->
+        assert_equal
+          [ -0.819648121789; -0.302316725241; -0.982542297368 ]
+          (out (eval brain1 custom_nn_input))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify brain2 out after eval once " >:: fun _ ->
+        assert_equal
+          [ 0.980041660881; 0.982346676272; -0.999987950676 ]
+          (out (eval brain2 (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify brain1 mem after eval once " >:: fun _ ->
+        assert_equal
+          [
+            -0.536795060272;
+            -0.0363876789966;
+            0.980027277103;
+            0.64740625151;
+            0.997570951552;
+          ]
+          (mem (eval brain1 (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify brain1 mem after eval once with nonzero input"
+      >:: fun _ ->
+        assert_equal
+          [
+            -0.998644873668;
+            -0.592763477777;
+            0.469106736655;
+            0.892021834837;
+            0.403483291783;
+          ]
+          (mem (eval brain1 custom_nn_input))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify brain2 mem after eval once " >:: fun _ ->
+        assert_equal
+          [
+            -0.992130005065;
+            -0.19658285145;
+            -0.434309339932;
+            -0.99930975995;
+            0.988446020584;
+          ]
+          (mem (eval brain2 (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+    ]
+  in
+
+  let mutated_tests =
+    [
+      ( "test mutated brain creation" >:: fun _ ->
+        assert_equal
+          ("test/mutated1.json" |> Yojson.Safe.from_file
+         |> Brain.from_json)
+          (Random.init random_env;
+           mutate ~r:0. default_params brain1)
+          ~printer:print_brain );
+      ( "mutate memory initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0.; 0.; 0. ]
+          (mem (mutate default_params brain1))
+          ~printer:print_list );
+      ( "mutate output initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0. ]
+          (out (mutate default_params brain1))
+          ~printer:print_list );
+      ( "eval brain1 mutated param=0 " >:: fun _ ->
+        assert_equal
+          [ 0.896572344798; 0.896572344798; 0.896572344798 ]
+          (let mutated = mutate ~r:0. ~g:0.25 default_params brain1 in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "eval brain1 mutated param=swap_chance " >:: fun _ ->
+        assert_equal
+          [ 0.999909913634; -0.462594099587; 0.995201312081 ]
+          (let mutated =
+             mutate ~r:default_params.swap_chance ~g:0.25 default_params
+               brain1
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "brain1 mutated param=swap_chance equals param=a little above \
+         swap_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
            mutate
              ~r:(default_params.swap_chance +. 0.001)
-             default_params brain1
-         in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        (Random.init random_env;
-         let mutated =
-           mutate ~r:default_params.swap_chance default_params brain1
-         in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "brain1 mutated param=1 equals param=1 - swap_chance - \
-       mutate_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         mutate ~r:1. default_params brain1)
-        (Random.init random_env;
-         mutate
-           ~r:
-             (1. -. default_params.swap_chance
-            -. default_params.mutate_chance)
-           default_params brain1)
-        ~printer:print_brain );
-    ( "eval brain1 mutated param=1 equals param=1 - swap_chance - \
-       mutate_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         let mutated = mutate ~r:1. default_params brain1 in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        (Random.init random_env;
-         let mutated =
+             default_params brain1)
+          (Random.init random_env;
+           mutate ~r:default_params.swap_chance default_params brain1)
+          ~printer:print_brain );
+      ( "eval brain1 mutated param=swap_chance equals param=a little \
+         above swap_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
+           let mutated =
+             mutate
+               ~r:(default_params.swap_chance +. 0.001)
+               default_params brain1
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          (Random.init random_env;
+           let mutated =
+             mutate ~r:default_params.swap_chance default_params brain1
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "brain1 mutated param=1 equals param=1 - swap_chance - \
+         mutate_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
+           mutate ~r:1. default_params brain1)
+          (Random.init random_env;
            mutate
              ~r:
                (1. -. default_params.swap_chance
               -. default_params.mutate_chance)
-             default_params brain1
-         in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "brain1 mutated param=0 equals param=a little below swap_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         mutate
-           ~r:(default_params.swap_chance -. 0.001)
-           default_params brain1)
-        (Random.init random_env;
-         mutate ~r:0. default_params brain1)
-        ~printer:print_brain );
-    ( "eval brain1 mutated param=0 equals param=a little below \
-       swap_chance"
-    >:: fun _ ->
-      assert_equal
-        (Random.init random_env;
-         let mutated =
+             default_params brain1)
+          ~printer:print_brain );
+      ( "eval brain1 mutated param=1 equals param=1 - swap_chance - \
+         mutate_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
+           let mutated = mutate ~r:1. default_params brain1 in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          (Random.init random_env;
+           let mutated =
+             mutate
+               ~r:
+                 (1. -. default_params.swap_chance
+                -. default_params.mutate_chance)
+               default_params brain1
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "brain1 mutated param=0 equals param=a little below swap_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
            mutate
              ~r:(default_params.swap_chance -. 0.001)
-             default_params brain1
-         in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        (Random.init random_env;
-         let mutated = mutate ~r:0. default_params brain1 in
-         out (eval mutated (List.init 18 (fun _ -> 0.))))
-        ~printer:print_list ~cmp:cmp_float_lists );
-    ( "test mated weight=.5 brain creation" >:: fun _ ->
-      assert_equal
-        ("test/mated_point5.json" |> Yojson.Safe.from_file
-       |> Brain.from_json)
-        (combine 0.5 brain1 brain2)
-        ~printer:print_brain );
-  ]
+             default_params brain1)
+          (Random.init random_env;
+           mutate ~r:0. default_params brain1)
+          ~printer:print_brain );
+      ( "eval brain1 mutated param=0 equals param=a little below \
+         swap_chance"
+      >:: fun _ ->
+        assert_equal
+          (Random.init random_env;
+           let mutated =
+             mutate
+               ~r:(default_params.swap_chance -. 0.001)
+               default_params brain1
+           in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          (Random.init random_env;
+           let mutated = mutate ~r:0. default_params brain1 in
+           out (eval mutated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+    ]
+  in
+
+  let mated_tests =
+    let mated = combine 0.5 brain1 brain2 in
+    [
+      ( "test mated weight=.5 brain creation" >:: fun _ ->
+        assert_equal
+          ("test/mated_point5.json" |> Yojson.Safe.from_file
+         |> Brain.from_json)
+          mated ~printer:print_brain );
+      ( "mated memory initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem mated)
+          ~printer:print_list );
+      ( "mated output initially empty" >:: fun _ ->
+        assert_equal [ 0.; 0.; 0. ] (out mated) ~printer:print_list );
+      ( "verify mated out after eval once " >:: fun _ ->
+        assert_equal
+          [ 0.98683663704; -0.2757826989; -0.947449814467 ]
+          (out (eval mated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify mated out after eval once with nonzero input"
+      >:: fun _ ->
+        assert_equal
+          [ 0.942906688766; 0.521738867995; 0.4997127204 ]
+          (out (eval mated custom_nn_input))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify mated mem after eval once " >:: fun _ ->
+        assert_equal
+          [
+            -0.237873293316;
+            0.186278342113;
+            0.101482806737;
+            -0.992857458514;
+            0.710970493196;
+          ]
+          (mem (eval mated (List.init 18 (fun _ -> 0.))))
+          ~printer:print_list ~cmp:cmp_float_lists );
+      ( "verify mated mem after eval once with nonzero input"
+      >:: fun _ ->
+        assert_equal
+          [
+            -0.0874158832528;
+            -0.460894622424;
+            0.312202046404;
+            -0.613391503121;
+            0.623319530889;
+          ]
+          (mem (eval mated custom_nn_input))
+          ~printer:print_list ~cmp:cmp_float_lists );
+    ]
+  in
+
+  List.flatten [ basic_brains; mutated_tests; mated_tests ]
 
 let suite =
   "test suite for Clans"
