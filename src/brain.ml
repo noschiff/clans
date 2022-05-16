@@ -49,7 +49,12 @@ let gaussian () =
   let x, y = (Random.float 1., Random.float 1.) in
   sqrt (-2. *. log x) *. cos (2. *. Float.pi *. y)
 
-let normal ?g m s = ((match g with | None -> gaussian () | Some x -> x) *. s) +. m
+let normal ?g m s =
+  (match g with
+  | None -> gaussian ()
+  | Some x -> x)
+  *. s
+  +. m
 
 (** Creates an mxn matrix with normal random distributed numbers *)
 let normal_matrix n m =
@@ -113,7 +118,7 @@ let mutate ?r ?g p b =
         | None -> gaussian ())
     | c when p.swap_chance <= c && c < p.swap_chance +. p.mutate_chance
       ->
-        v +. normal ?g:g 0. p.mutate_stdev
+        v +. normal ?g 0. p.mutate_stdev
     | _ -> v
   in
   let mutm a = a |> Matrix.map mutv in

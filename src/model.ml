@@ -19,16 +19,14 @@ type params = {
 
           Requires: [0 <= energy_per_cell] **)
   step_distributed_energy : float;
-      (** Proportion of global energy bank distributed to
-          each cell at the onset of its step. This will affect
-          the equilibrium population.
-          (default: 0.001)
+      (** Proportion of global energy bank distributed to each cell at
+          the onset of its step. This will affect the equilibrium
+          population. (default: 0.001)
 
           Requires: [0 < step_distributed_energy <= 1] **)
   initial_energy : int;
-      (** Amount of initial energy to give to randomly generated
-          cells (only used during population).
-          (default: 100)
+      (** Amount of initial energy to give to randomly generated cells
+          (only used during population). (default: 100)
 
           Requires: [0 < initial_energy] **)
   action_threshold : float;
@@ -61,21 +59,20 @@ type params = {
 
           Requires: [0 <= reproduction_energy_retention <= 1]**)
   nation_mutation_proportion : float;
-      (** Maximum amount to modify the nation by. The nation of 
-          an offspring will have a uniform random value from
-          [-nation_mutation_proportion, nation_mutation_proportion) added
-          to it. (Default: 0.1)
+      (** Maximum amount to modify the nation by. The nation of an
+          offspring will have a uniform random value from
+          [-nation_mutation_proportion, nation_mutation_proportion)
+          added to it. (Default: 0.1)
 
           Requires: [0 <= nation_mutation_proportion <= 0.5] **)
-  mutation : Brain.mut_params;
-      (** Parameters for mutation **)
+  mutation : Brain.mut_params;  (** Parameters for mutation **)
 }
 
 type world = {
   params : params;
   cells : life option array array;
-  mutable steps : int;  (* Global number of steps taken *)
-  mutable counter : int;  (* Represents the id count *)
+  mutable steps : int; (* Global number of steps taken *)
+  mutable counter : int; (* Represents the id count *)
   mutable bank : int; (* Global energy bank *)
   mutable queue : (int * int * int * int) list;
       (** An element in this list is of the form (x, y, id, s) where (x,
@@ -147,79 +144,94 @@ let cell_from_json json =
           id = List.assoc "id" x |> to_int;
           nation = List.assoc "nation" x |> to_number;
           energy = List.assoc "energy" x |> to_int;
-          brain = match List.assoc "brain" x with 
-          | exception Not_found -> Brain.create 18 3 5 [ 10; 10; 5 ];
-          | v -> Brain.from_json v;
+          brain =
+            (match List.assoc "brain" x with
+            | exception Not_found -> Brain.create 18 3 5 [ 10; 10; 5 ]
+            | v -> Brain.from_json v);
         }
   | _ -> raise (Invalid_argument "Invalid world JSON.")
 
+let to_json world =
+  `Assoc
+    [
+      ( "cells",
+        `List
+          (world.cells
+          |> Array.map (fun x ->
+                 `List (x |> Array.map cell_to_json |> Array.to_list))
+          |> Array.to_list) );
+      ( "params",
+        `Assoc
+          [
+            ("energy_per_cell", `Int world.params.energy_per_cell);
+            ( "step_distributed_energy",
+              `Float world.params.step_distributed_energy );
+            ("initial_energy", `Int world.params.initial_energy);
+            ("action_threshold", `Float world.params.action_threshold);
+            ("attack_damage", `Float world.params.attack_damage);
+            ( "attack_energy_retained",
+              `Float world.params.attack_energy_retained );
+            ( "move_energy_consumption",
+              `Int world.params.move_energy_consumption );
+            ( "reproduction_max_energy_use",
+              `Float world.params.reproduction_max_energy_use );
+            ( "reproduction_energy_retention",
+              `Float world.params.reproduction_energy_retention );
+            ( "nation_mutation_proportion",
+              `Float world.params.nation_mutation_proportion );
+            ("mutation", world.params.mutation |> Brain.params_to_json);
+          ] );
+      ("steps", `Int world.steps);
+      ("counter", `Int world.counter);
+      ("bank", `Int world.bank);
+      ( "queue",
+        `List
+          (world.queue
+          |> List.map (fun (x, y, i, s) ->
+                 `List [ `Int x; `Int y; `Int i; `Int s ])) );
+      ("dim_x", `Int world.dim_x);
+      ("dim_y", `Int world.dim_y);
+    ]
 
-let to_json world = `Assoc [
-  ("cells", `List (
-    world.cells
-    |> Array.map (fun x ->
-      `List (x |> Array.map cell_to_json |> Array.to_list))
-    |> Array.to_list));
-  ("params", `Assoc [
-    ("energy_per_cell", `Int world.params.energy_per_cell);
-    ("step_distributed_energy", `Float world.params.step_distributed_energy);
-    ("initial_energy", `Int world.params.initial_energy);
-    ("action_threshold", `Float world.params.action_threshold);
-    ("attack_damage", `Float world.params.attack_damage);
-    ("attack_energy_retained", `Float world.params.attack_energy_retained);
-    ("move_energy_consumption", `Int world.params.move_energy_consumption);
-    ("reproduction_max_energy_use", `Float world.params.reproduction_max_energy_use);
-    ("reproduction_energy_retention", `Float world.params.reproduction_energy_retention);
-    ("nation_mutation_proportion", `Float world.params.nation_mutation_proportion);
-    ("mutation", world.params.mutation |> Brain.params_to_json);
-  ]);
-  ("steps", `Int world.steps);
-  ("counter", `Int world.counter);
-  ("bank", `Int world.bank);
-  ("queue", `List (
-    world.queue
-    |> List.map (fun (x, y, i, s) -> `List [
-      `Int x;
-      `Int y;
-      `Int i;
-      `Int s;
-    ] )
-  ));
-  ("dim_x", `Int world.dim_x);
-  ("dim_y", `Int world.dim_y);
-]
-
-let of_json json = 
+let of_json json =
   let open Yojson.Safe.Util in
   let json = json |> to_assoc in
   {
-    cells = json |> List.assoc "cells" |> to_list
-    |> List.map (fun x -> x |> to_list |> List.map cell_from_json |> Array.of_list)
-    |> Array.of_list;
-    params = (let p = json |> List.assoc "params" |> to_assoc in
-    {
-      energy_per_cell = p |> List.assoc "energy_per_cell" |> to_int;
-      step_distributed_energy = p |> List.assoc "step_distributed_energy" |> to_number;
-      initial_energy = p |> List.assoc "initial_energy" |> to_int;
-      action_threshold = p |> List.assoc "action_threshold" |> to_number;
-      attack_damage = p |> List.assoc "attack_damage" |> to_number;
-      attack_energy_retained = p |> List.assoc "attack_energy_retained" |> to_number;
-      move_energy_consumption = p |> List.assoc "move_energy_consumption" |> to_int;
-      reproduction_max_energy_use = p |> List.assoc "reproduction_max_energy_use" |> to_number;
-      reproduction_energy_retention = p |> List.assoc "reproduction_energy_retention" |> to_number;
-      nation_mutation_proportion = p |> List.assoc "nation_mutation_proportion" |> to_number;
-      mutation = p |> List.assoc "mutation" |> Brain.params_of_json;
-    });
+    cells =
+      json |> List.assoc "cells" |> to_list
+      |> List.map (fun x ->
+             x |> to_list |> List.map cell_from_json |> Array.of_list)
+      |> Array.of_list;
+    params =
+      (let p = json |> List.assoc "params" |> to_assoc in
+       {
+         energy_per_cell = p |> List.assoc "energy_per_cell" |> to_int;
+         step_distributed_energy =
+           p |> List.assoc "step_distributed_energy" |> to_number;
+         initial_energy = p |> List.assoc "initial_energy" |> to_int;
+         action_threshold =
+           p |> List.assoc "action_threshold" |> to_number;
+         attack_damage = p |> List.assoc "attack_damage" |> to_number;
+         attack_energy_retained =
+           p |> List.assoc "attack_energy_retained" |> to_number;
+         move_energy_consumption =
+           p |> List.assoc "move_energy_consumption" |> to_int;
+         reproduction_max_energy_use =
+           p |> List.assoc "reproduction_max_energy_use" |> to_number;
+         reproduction_energy_retention =
+           p |> List.assoc "reproduction_energy_retention" |> to_number;
+         nation_mutation_proportion =
+           p |> List.assoc "nation_mutation_proportion" |> to_number;
+         mutation = p |> List.assoc "mutation" |> Brain.params_of_json;
+       });
     steps = json |> List.assoc "steps" |> to_int;
     counter = json |> List.assoc "counter" |> to_int;
     bank = json |> List.assoc "bank" |> to_int;
-    queue = json 
-      |> List.assoc "queue" 
-      |> to_list 
-      |> List.map to_list 
+    queue =
+      json |> List.assoc "queue" |> to_list |> List.map to_list
       |> List.map (function
-      | [x; y; i; s] -> (to_int x, to_int y, to_int i, to_int s)
-      | _ -> raise (Invalid_argument "Invalid world json"));
+           | [ x; y; i; s ] -> (to_int x, to_int y, to_int i, to_int s)
+           | _ -> raise (Invalid_argument "Invalid world json"));
     dim_x = json |> List.assoc "dim_x" |> to_int;
     dim_y = json |> List.assoc "dim_y" |> to_int;
   }
@@ -240,8 +252,9 @@ let clear_cell world x y =
   let x, y = normalize world x y in
   match world.cells.(x).(y) with
   | None -> ()
-  | Some l -> world.bank <- world.bank + l.energy;
-    world.cells.(x).(y) <- None
+  | Some l ->
+      world.bank <- world.bank + l.energy;
+      world.cells.(x).(y) <- None
 
 let set_cell world x y life =
   let x, y = normalize world x y in
@@ -260,29 +273,28 @@ let random_life world x y =
           id = world.counter;
           brain = Brain.create 18 3 5 [ 10; 10; 5 ];
           nation = Random.float 1.;
-          (* this can allow the world energy bank to become
-          negative, meaning it will consume energy from living
-          cells. *)
+          (* this can allow the world energy bank to become negative,
+             meaning it will consume energy from living cells. *)
           energy = world.params.initial_energy;
         };
       world.queue <-
         world.queue @ [ (x, y, world.counter, world.steps) ]
   | Some _ -> raise (InvalidWorldOperation (x, y))
 
-let populate_random world d = 
-  let until = 
-    float_of_int world.bank *. (1.-.d)
-    |> int_of_float
-    |> max 0
-  in let rec p _ = if world.bank > until
-  then
-    let x, y = 
-      Random.int world.dim_x, Random.int world.dim_y in
-    match random_life world x y with
-    | exception (InvalidWorldOperation _) -> ();
-    | _ -> ();
-    p ()
-  in p ()
+let populate_random world d =
+  let until =
+    float_of_int world.bank *. (1. -. d) |> int_of_float |> max 0
+  in
+  let rec p _ =
+    if world.bank > until then
+      let x, y = (Random.int world.dim_x, Random.int world.dim_y) in
+      match random_life world x y with
+      | exception InvalidWorldOperation _ -> ()
+      | _ ->
+          ();
+          p ()
+  in
+  p ()
 
 let get_size world = (world.dim_x, world.dim_y)
 
@@ -335,7 +347,9 @@ let rec step world =
       (a -. b +. 1. |> fun x -> Float.rem x 1.) |> fun x ->
       if x < 0.5 then x else 1. -. x
     in
-    if life.energy = 0 then (clear_cell world x y; (-1, -1))
+    if life.energy = 0 then (
+      clear_cell world x y;
+      (-1, -1))
     else (
       life.brain <-
         Brain.eval life.brain
@@ -348,7 +362,7 @@ let rec step world =
       match get_cell world nx ny with
       | None ->
           (* No cell here, just move *)
-          denergy world life @@ -world.params.move_energy_consumption ;
+          denergy world life @@ -world.params.move_energy_consumption;
           (* only move if we have the energy to, otherwise die *)
           if life.energy > 0 then set_cell world nx ny life;
           clear_cell world x y;
@@ -357,60 +371,68 @@ let rec step world =
           (* Cell here, interact *)
           let _, _, ho = calculate_brain_output world lifeo in
           match (h, ho) with
-          | _ when h > 0. && ho > 0. -> ( (* Mate *)
-            let shuffle d = (
-              let nd = List.map (fun c -> (Random.bits (), c)) d in
-              let sond = List.sort compare nd in
-              List.map snd sond) in
-            let rec find_empt = function
-              | [] -> None
-              | (ox, oy) :: t -> (
-                match get_cell world (x+ox) (y+oy) with
-                  | Some _ -> find_empt t
-                  | None -> Some (x+ox, y+oy)
-              ) in
-            (match shuffle offsets |> find_empt with
+          | _ when h > 0. && ho > 0. ->
+              (* Mate *)
+              let shuffle d =
+                let nd = List.map (fun c -> (Random.bits (), c)) d in
+                let sond = List.sort compare nd in
+                List.map snd sond
+              in
+              let rec find_empt = function
+                | [] -> None
+                | (ox, oy) :: t -> (
+                    match get_cell world (x + ox) (y + oy) with
+                    | Some _ -> find_empt t
+                    | None -> Some (x + ox, y + oy))
+              in
+              (match shuffle offsets |> find_empt with
               | None -> () (* Failed to mate, no open space *)
-              | Some (px, py) ->
-              let prop = h /. (h +. ho) in
-              let (de, deo) = (
-                let f x e = 
-                  x *. world.params.reproduction_max_energy_use
-                  *. float_of_int e
-                in (f h life.energy, f ho lifeo.energy)
-              ) in
-              let (rde, rdeo) = (
-                de *. world.params.reproduction_energy_retention,
-                deo *. world.params.reproduction_energy_retention
-              ) in
-              let (de, deo) = (int_of_float de, int_of_float deo) in
-              let (rde, rdeo) = (int_of_float rde, int_of_float rdeo) in
-              denergy world life @@ -de;
-              denergy world lifeo @@ -deo;
-              world.counter <- world.counter + 1;
-              set_cell world px py {
-                id = world.counter;
-                nation = 
-                (let (n, no) = (life.nation, lifeo.nation) in
-                  mod_float (n *. prop
-                  +. no *. (1. -. prop)
-                  +. (let d = Float.abs (n -. no) in
-                    if d < 1. -. d then 0. else 0.5)
-                  +. Random.float world.params.nation_mutation_proportion *. 2.
-                  -. world.params.nation_mutation_proportion
-                  +. 1.) 1.
-                );
-                energy = 0;
-                brain = 
-                  Brain.combine prop life.brain lifeo.brain
-                  |> Brain.mutate world.params.mutation;
-              };
-              match get_cell world px py with
-                | None -> failwith "Missing life"
-                | Some nl -> denergy world nl @@ rde+rdeo;
-            ); 
-            (x, y)
-          )
+              | Some (px, py) -> (
+                  let prop = h /. (h +. ho) in
+                  let de, deo =
+                    let f x e =
+                      x *. world.params.reproduction_max_energy_use
+                      *. float_of_int e
+                    in
+                    (f h life.energy, f ho lifeo.energy)
+                  in
+                  let rde, rdeo =
+                    ( de *. world.params.reproduction_energy_retention,
+                      deo *. world.params.reproduction_energy_retention
+                    )
+                  in
+                  let de, deo = (int_of_float de, int_of_float deo) in
+                  let rde, rdeo =
+                    (int_of_float rde, int_of_float rdeo)
+                  in
+                  denergy world life @@ -de;
+                  denergy world lifeo @@ -deo;
+                  world.counter <- world.counter + 1;
+                  set_cell world px py
+                    {
+                      id = world.counter;
+                      nation =
+                        (let n, no = (life.nation, lifeo.nation) in
+                         mod_float
+                           ((n *. prop)
+                           +. (no *. (1. -. prop))
+                           +. (let d = Float.abs (n -. no) in
+                               if d < 1. -. d then 0. else 0.5)
+                           +. Random.float
+                                world.params.nation_mutation_proportion
+                              *. 2.
+                           -. world.params.nation_mutation_proportion
+                           +. 1.)
+                           1.);
+                      energy = 0;
+                      brain =
+                        Brain.combine prop life.brain lifeo.brain
+                        |> Brain.mutate world.params.mutation;
+                    };
+                  match get_cell world px py with
+                  | None -> failwith "Missing life"
+                  | Some nl -> denergy world nl @@ (rde + rdeo)));
+              (x, y)
           | -1., _ ->
               (* attacking *)
               let e, eo = (life.energy, lifeo.energy) in
@@ -425,11 +447,11 @@ let rec step world =
               denergy world lifeo @@ -int_of_float de;
               if lifeo.energy <= 0 then clear_cell world nx ny;
               (* Remove the cost of acting *)
-              denergy world life @@ -world.params.move_energy_consumption;
+              denergy world life
+              @@ -world.params.move_energy_consumption;
               if life.energy <= 0 then clear_cell world x y;
               (x, y)
-          | _ -> (x, y))
-    )
+          | _ -> (x, y)))
     (* No interaction *)
   in
   let rec pn = function
@@ -440,9 +462,11 @@ let rec step world =
         | None -> pn t
         | Some life ->
             if life.id = id then
-              (let nx, ny = act life x y in
-                t @ (if life.energy > 0 then [ (nx, ny, id, world.steps) ]
-                else []))
+              let nx, ny = act life x y in
+              t
+              @
+              if life.energy > 0 then [ (nx, ny, id, world.steps) ]
+              else []
             else pn t)
   in
   world.queue <- pn world.queue

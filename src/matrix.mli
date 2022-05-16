@@ -42,8 +42,8 @@ val dot : t -> t -> t
     Requires: a has the same number of columns as b has rows. *)
 
 val map2 : (float -> float -> float) -> t -> t -> t
-(** [map f a b] applies [f aij bij] on corresponding elements
-    [aij] and [bij] of [a] and [b].
+(** [map f a b] applies [f aij bij] on corresponding elements [aij] and
+    [bij] of [a] and [b].
 
     Requires: a and b have the same dimensions. *)
 
