@@ -18,6 +18,11 @@ let load_from_file state filename =
   Yojson.Safe.from_file filename
   |> to_assoc |> List.assoc "world" |> Model.of_json |> set_world state
 
+let load_from_string state str =
+  let open Yojson.Safe.Util in
+  Yojson.Safe.from_string str
+  |> to_assoc |> List.assoc "world" |> Model.of_json |> set_world state
+
 let display_cell state x y = ()
 (*Model.get_cell state.world x y |> Server.respond (* draw cell*) x y
   state.world state.view |> set_view state

@@ -30,9 +30,9 @@ let params_of_json j =
   let open Yojson.Safe.Util in
   let json = j |> to_assoc in
   {
-    swap_chance = json |> List.assoc "swap_chance" |> to_float;
-    mutate_chance = json |> List.assoc "mutate_chance" |> to_float;
-    mutate_stdev = json |> List.assoc "mutate_stdev" |> to_float;
+    swap_chance = json |> List.assoc "swap_chance" |> to_number;
+    mutate_chance = json |> List.assoc "mutate_chance" |> to_number;
+    mutate_stdev = json |> List.assoc "mutate_stdev" |> to_number;
   }
 
 let params_to_json p =
@@ -163,10 +163,10 @@ let from_json j =
       |> List.map matrix_from_json
       |> Array.of_list;
     mem =
-      List.assoc "mem" x |> to_list |> List.map to_float
+      List.assoc "mem" x |> to_list |> List.map to_number
       |> Array.of_list;
     out =
-      List.assoc "out" x |> to_list |> List.map to_float
+      List.assoc "out" x |> to_list |> List.map to_number
       |> Array.of_list;
   }
 

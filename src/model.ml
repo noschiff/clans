@@ -145,7 +145,7 @@ let cell_from_json json =
       Some
         {
           id = List.assoc "id" x |> to_int;
-          nation = List.assoc "nation" x |> to_float;
+          nation = List.assoc "nation" x |> to_number;
           energy = List.assoc "energy" x |> to_int;
           brain = match List.assoc "brain" x with 
           | exception Not_found -> Brain.create 18 3 5 [ 10; 10; 5 ];
@@ -199,15 +199,15 @@ let of_json json =
     params = (let p = json |> List.assoc "params" |> to_assoc in
     {
       energy_per_cell = p |> List.assoc "energy_per_cell" |> to_int;
-      step_distributed_energy = p |> List.assoc "step_distributed_energy" |> to_float;
+      step_distributed_energy = p |> List.assoc "step_distributed_energy" |> to_number;
       initial_energy = p |> List.assoc "initial_energy" |> to_int;
-      action_threshold = p |> List.assoc "action_threshold" |> to_float;
-      attack_damage = p |> List.assoc "attack_damage" |> to_float;
-      attack_energy_retained = p |> List.assoc "attack_energy_retained" |> to_float;
+      action_threshold = p |> List.assoc "action_threshold" |> to_number;
+      attack_damage = p |> List.assoc "attack_damage" |> to_number;
+      attack_energy_retained = p |> List.assoc "attack_energy_retained" |> to_number;
       move_energy_consumption = p |> List.assoc "move_energy_consumption" |> to_int;
-      reproduction_max_energy_use = p |> List.assoc "reproduction_max_energy_use" |> to_float;
-      reproduction_energy_retention = p |> List.assoc "reproduction_energy_retention" |> to_float;
-      nation_mutation_proportion = p |> List.assoc "nation_mutation_proportion" |> to_float;
+      reproduction_max_energy_use = p |> List.assoc "reproduction_max_energy_use" |> to_number;
+      reproduction_energy_retention = p |> List.assoc "reproduction_energy_retention" |> to_number;
+      nation_mutation_proportion = p |> List.assoc "nation_mutation_proportion" |> to_number;
       mutation = p |> List.assoc "mutation" |> Brain.params_of_json;
     });
     steps = json |> List.assoc "steps" |> to_int;
