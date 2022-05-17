@@ -18,16 +18,14 @@ type params = {
 
           Requires: [0 <= energy_per_cell] **)
   step_distributed_energy : float;
-      (** Proportion of global energy bank distributed to
-          each cell at the onset of its step. This will affect
-          the equilibrium population.
-          (default: 0.001)
+      (** Proportion of global energy bank distributed to each cell at
+          the onset of its step. This will affect the equilibrium
+          population. (default: 0.001)
 
           Requires: [0 < step_distributed_energy <= 1] **)
   initial_energy : int;
-      (** Amount of initial energy to give to randomly generated
-          cells (only used during population).
-          (default: 100)
+      (** Amount of initial energy to give to randomly generated cells
+          (only used during population). (default: 100)
 
           Requires: [0 < initial_energy] **)
   action_threshold : float;
@@ -60,14 +58,13 @@ type params = {
 
           Requires: [0 <= reproduction_energy_retention <= 1]**)
   nation_mutation_proportion : float;
-      (** Maximum amount to modify the nation by. The nation of 
-          an offspring will have a uniform random value from
-          [-nation_mutation_proportion, nation_mutation_proportion) added
-          to it. (Default: 0.1)
+      (** Maximum amount to modify the nation by. The nation of an
+          offspring will have a uniform random value from
+          (-nation_mutation_proportion, nation_mutation_proportion)
+          added to it. (Default: 0.1)
 
           Requires: [0 <= nation_mutation_proportion <= 0.5] **)
-  mutation : Brain.mut_params;
-      (** Parameters for mutation **)
+  mutation : Brain.mut_params;  (** Parameters for mutation **)
 }
 (** Type representing all parameters. **)
 
