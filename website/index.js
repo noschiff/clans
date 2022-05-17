@@ -74,10 +74,6 @@ function setSelectedCell(canvasContext, cell) {
       document.getElementById("btnEditCell").innerText = "Edit Cell";
       document.getElementById("lblEditCell").innerText = "Edit Cell @ (" + cell.x + "," + cell.y + ")"
       document.getElementById("btnEditCell").disabled = false;
-    } else if (cell.type == "empty") {
-      document.getElementById("btnEditCell").innerText = "Add Cell";
-      document.getElementById("lblEditCell").innerText = "Add Cell @ (" + cell.x + "," + cell.y + ")"
-      document.getElementById("btnEditCell").disabled = false;
     } else {
       document.getElementById("btnEditCell").disabled = true;
     }

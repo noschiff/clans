@@ -1,7 +1,7 @@
 open OUnit2
 open Clans
 
-let data_dir = "data/test/"
+let data_dir = "test/"
 
 (** [print_list lst] pretty-prints float list [lst]. Adapted from
     Cornell CS 3110 A2 Code *)
@@ -51,7 +51,6 @@ let cmp_float_matrices l1 l2 =
   cmp l1 l2
 
 let test_matrix = Matrix.of_list [ [ 3.; 1. ]; [ 1.; 0. ] ]
-
 let dim_matrix = Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ]
 
 let simple_big_matrix =
@@ -406,9 +405,14 @@ let model_tests =
         end );
   ]
 
-(* TODO: FIX! *)
 let controller_tests =
   [
+    ( "Basic world initiate test" >:: fun _ ->
+      assert_equal true
+        begin
+          let _ = Controller.init (Model.new_world 10 10) in
+          true
+        end );
     ( "Empty 1x1 world test" >:: fun _ ->
       Controller.save_to_file
         (data_dir ^ "empty1x1.json")
@@ -421,6 +425,47 @@ let controller_tests =
       let nstate = Controller.init @@ Model.new_world 1 1 in
       Controller.load_from_file nstate (data_dir ^ "cell1x1.json");
       assert_equal state nstate );
+    ( "Update cell test" >:: fun _ ->
+      assert_equal true
+        begin
+          let world = Model.new_world 10 10 in
+          Model.random_life world 5 5;
+          Model.random_life world 6 6;
+          match Model.get_cell world 6 6 with
+          | Some l ->
+              let state = Controller.init world in
+              Controller.update_cell state 5 5 l;
+              true
+          | None -> false
+        end );
+    ( "Populate state test" >:: fun _ ->
+      assert_equal true
+        begin
+          let state = Controller.init (Model.new_world 10 10) in
+          Controller.populate_world state 1.;
+          Controller.save_to_file
+            (data_dir ^ "populated10x10.json")
+            state;
+          true
+        end );
+    ( "Full test; Initialize state of 25x25, populate world, step a \
+       few times, save to file, then load a 1x1 state, then save that \
+       to json. Json should only have 1 cell, and it should be empty."
+    >:: fun _ ->
+      assert_equal true
+        begin
+          let state = Controller.init (Model.new_world 25 25) in
+          Controller.populate_world state 1.;
+          Controller.step state;
+          Controller.step state;
+          Controller.step state;
+          Controller.save_to_file
+            (data_dir ^ "fullworld25x25.json")
+            state;
+          Controller.load_from_file state (data_dir ^ "empty1x1.json");
+          Controller.save_to_file (data_dir ^ "fullworld1x1.json") state;
+          true
+        end );
   ]
 
 (* control randomness for testing purposes*)
@@ -830,6 +875,7 @@ let brain_tests =
 
 let suite =
   "test suite for Clans"
-  >::: List.flatten [ matrix_tests; model_tests; brain_tests ]
+  >::: List.flatten
+         [ matrix_tests; model_tests; brain_tests; controller_tests ]
 
 let _ = run_test_tt_main suite

@@ -15,7 +15,7 @@ play:
 clean:
 	dune clean
 
-doc:
+docs:
 	dune build @doc
 
 zip:
