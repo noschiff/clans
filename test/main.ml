@@ -417,14 +417,6 @@ let controller_tests =
       Controller.save_to_file
         (data_dir ^ "empty1x1.json")
         (Controller.init @@ Model.new_world 1 1) );
-    ( "Cell 1x1 world test" >:: fun _ ->
-      let state = Controller.init @@ Model.new_world 1 1 in
-      Controller.random_cell state 0 0;
-      Controller.step state;
-      Controller.save_to_file (data_dir ^ "cell1x1.json") state;
-      let nstate = Controller.init @@ Model.new_world 1 1 in
-      Controller.load_from_file nstate (data_dir ^ "cell1x1.json");
-      assert_equal state nstate );
     ( "Update cell test" >:: fun _ ->
       assert_equal true
         begin
@@ -448,6 +440,48 @@ let controller_tests =
             state;
           true
         end );
+    ( "Attempt to load in a non-existent world file. Should error."
+    >:: fun _ ->
+      assert_bool "didn't raise"
+        begin
+          try
+            let state = Controller.init (Model.new_world 10 10) in
+            Controller.load_from_file state
+              (data_dir ^ "i_dont_exist_noob.json");
+            false
+          with
+          | Sys_error s -> true
+        end );
+    ( "Attempt to load in an incorrect world file. Should error."
+    >:: fun _ ->
+      assert_bool "didn't raise"
+        begin
+          try
+            let state = Controller.init (Model.new_world 10 10) in
+            Controller.load_from_file state (data_dir ^ "mutated1.json");
+            false
+          with
+          | Not_found -> true
+        end );
+    ( "Attempt to save to in a non-existent world file. Should create \
+       a new file."
+    >:: fun _ ->
+      assert_equal true
+        begin
+          let state = Controller.init (Model.new_world 10 10) in
+          Controller.save_to_file (data_dir ^ "test_save.json") state;
+          true
+        end );
+    ( "Check to make sure file saves proper data; Create state, \
+       populate it, save file, then load it in."
+    >:: fun _ ->
+      let state = Controller.init @@ Model.new_world 25 25 in
+      Controller.populate_world state 1.;
+      Controller.step state;
+      Controller.save_to_file (data_dir ^ "chained_save.json") state;
+      let nstate = Controller.init @@ Model.new_world 1 1 in
+      Controller.load_from_file nstate (data_dir ^ "chained_save.json");
+      assert_equal state nstate );
     ( "Full test; Initialize state of 25x25, populate world, step a \
        few times, save to file, then load a 1x1 state, then save that \
        to json. Json should only have 1 cell, and it should be empty."
@@ -463,7 +497,10 @@ let controller_tests =
             (data_dir ^ "fullworld25x25.json")
             state;
           Controller.load_from_file state (data_dir ^ "empty1x1.json");
-          Controller.save_to_file (data_dir ^ "fullworld1x1.json") state;
+          let check_state = Controller.init (Model.new_world 10 10) in
+          Controller.load_from_file check_state
+            (data_dir ^ "empty1x1.json");
+          assert_equal state check_state;
           true
         end );
   ]
@@ -522,6 +559,16 @@ let brain_tests =
           begin
             "test/brain2.json" |> Yojson.Safe.from_file
           |> Brain.from_json
+          end
+          brain2 ~printer:print_brain );
+      ( "Test proper brain creation from json; Convert from JSON, then \
+         back into json to test proper saving. Then back from json and \
+         compare against brain2."
+      >:: fun _ ->
+        assert_equal
+          begin
+            "test/brain2.json" |> Yojson.Safe.from_file
+          |> Brain.from_json |> Brain.to_json |> Brain.from_json
           end
           brain2 ~printer:print_brain );
       ( "memory initially empty" >:: fun _ ->
