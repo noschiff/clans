@@ -1,3 +1,5 @@
+open OUnit2
+
 type t = {
   weights : Matrix.t array;
   biases : Matrix.t array;
@@ -22,6 +24,25 @@ type mut_params = {
 
           Requires: [0 < mutate_stdev] **)
 }
+
+(** Helper functions for comparing brains *)
+let cmp_float_lists l1 l2 =
+  let rec cmp a b =
+    match (a, b) with
+    | [], [] -> true
+    | h1 :: t1, h2 :: t2 -> cmp_float h1 h2 && cmp t1 t2
+    | _ -> failwith "lists must have equal length"
+  in
+  cmp l1 l2
+
+let cmp_float_matrices l1 l2 =
+  let rec cmp a b =
+    match (a, b) with
+    | [], [] -> true
+    | h1 :: t1, h2 :: t2 -> cmp_float_lists h1 h2 && cmp t1 t2
+    | _ -> failwith "matrices must have equal sizes"
+  in
+  cmp l1 l2
 
 let default_params =
   { swap_chance = 0.005; mutate_chance = 0.02; mutate_stdev = 1. }
@@ -221,5 +242,29 @@ let eval brain inp =
   }
 
 let out brain = Array.to_list brain.out
-
 let mem brain = Array.to_list brain.mem
+
+let cmp_matrices l1 l2 =
+  let rec cmp a b =
+    match (a, b) with
+    | [], [] -> true
+    | h1 :: t1, h2 :: t2 ->
+        cmp_float_matrices (Matrix.to_list h1) (Matrix.to_list h2)
+        && cmp t1 t2
+    | _ -> failwith "matrices must have equal sizes"
+  in
+  cmp l1 l2
+
+let cmp_brain brain1 brain2 =
+  cmp_matrices
+    (Array.to_list brain1.weights)
+    (Array.to_list brain2.weights)
+  && cmp_matrices
+       (Array.to_list brain1.biases)
+       (Array.to_list brain2.biases)
+  && cmp_float_lists
+       (Array.to_list brain1.out)
+       (Array.to_list brain2.out)
+  && cmp_float_lists
+       (Array.to_list brain1.mem)
+       (Array.to_list brain2.mem)

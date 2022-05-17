@@ -1,4 +1,4 @@
 (library
  (name clans)
  (public_name Clans)
- (libraries opium yojson))
+ (libraries opium yojson ounit2))

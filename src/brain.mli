@@ -69,3 +69,9 @@ val out : t -> float list
 
 val mem : t -> float list
 (** [mem b] returns the current memory nodes of [b]. *)
+
+val cmp_brain : t -> t -> bool
+(** [cmp_brain b1 b2] compares 2 brains together and returns if they are
+    extremely similar. "Extremely similiar" means that the 2 brains are
+    similar enough for very minor floating-point differences in their
+    structure to not matter. *)
