@@ -1,4 +1,7 @@
+(** Module representing a matrix and operations on it. *)
+
 type t
+(** Represents a matrix. *)
 
 val create : int -> int -> t
 (** [create n m] creates an [n] by [m] matrix of 0s. *)
