@@ -970,4 +970,8 @@ let suite =
   >::: List.flatten
          [ matrix_tests; model_tests; brain_tests; controller_tests ]
 
-let _ = run_test_tt_main suite
+let _ =
+  run_test_tt_main suite;
+  Sys.remove (data_dir ^ "fullworld25x25.json");
+  Sys.remove (data_dir ^ "populated10x10.json");
+  Sys.remove (data_dir ^ "chained_save.json")
