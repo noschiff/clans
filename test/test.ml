@@ -1,3 +1,63 @@
+(* Approach to Testing: We made heavy use of both black box and glass
+   box testing. We covered the four main components of our project that
+   can be unit tested in this file: model.ml, brain.ml, matrix.ml, and
+   controller.ml. For each component, we wrote our tests so that they
+   would be tested in an identical environment each time since the
+   nature of our simulation means that the evolution is somewhat
+   unpredictable. We wrote various comparison functions to correctly
+   compare floating point numbers and data structures that use floating
+   point numbers, such as lists and matrices. For matrix.ml, we simply
+   tested various matrix operations using black box testing; we tested
+   expected behavior based on the written documentation for the module's
+   functions. We tested both positive and negative floating point
+   numbers and matrices of various sizes. We also tested that some
+   operations that violate preconditions do in fact fail, such as
+   multiplying matrices that are of incompatible sizes. By ensuring that
+   some sample matrix operations succeed as expected and some fail as
+   expected, we can be confident that our matrix behaves as intended.
+   For model.ml, we attempted to achieve full coverage of the code by
+   testing all possible paths for all public functions. First, we made
+   sure that the base functions such as creating a new world worked
+   properly. We then took it step-by-step with more higher-end and
+   complicated chained functions. With this strategy, we were able to
+   assure a higher validity of complex functions by assuring that the
+   lower-order functions are working. We also verified that illegal
+   world operations do in fact raise the Model.InvalidWorldOperation
+   exception. By ensuring that some sample world and life operations
+   succeed as expected and fail as expected, we can be confident that
+   our models behavior as intended. For controller.ml, we tested the
+   functionality of the program at large using glass box testing. The
+   controller synthesizes all of our components, excluding the front-end
+   and server, into the core of our simulation. We performed various
+   tasks with the simulation with the controller and then compared the
+   output of the world state to what we expected as a JSON. The brain.ml
+   testing was the most involved. Our brain testing consisted of both
+   black box and glass box testing. Part of our tests were written to
+   ensure that future development of the brain does not break the
+   fundamental components of the neural network. We primarily used glass
+   box testing for this, ensuring that the brain's evaluation and
+   internal memory behave according to the neural network design. Our
+   simulation is partially random to allow for different species to
+   evolve in different runs of the simulation. In order to test that
+   fundamental brain behavior didn't change as we wrote more parts of
+   the brain, we had to initialize the test suite to the same Random
+   module environment every run so that it would be predictable.
+   Additionally, we used black box testing for creation and modification
+   of the neural network. Namely, a parameter determines which action
+   will happen for brain mutation. We passed in various values for this
+   variable and ensured that, when in the same random environment,
+   multiple values for this parameter return the same mutated brain
+   according to the expected behavior for various values of this
+   variable. Finally, we wrote helper functions to print out our tested
+   data structures so that we could compare expected and actual values
+   for individual tests. By testing functions and comparing them to the
+   expected results for the main components of the simulation, we can be
+   confident that it is correct. We also manually tested the server and
+   the front-end. By using the buttons on the webpage, we were able to
+   test saving files, loading files, simulation, adding cells, and
+   adjusting playback speed, in addition to integration of the
+   front-end, server, and backend main codebase.*)
+
 open OUnit2
 open Clans
 
