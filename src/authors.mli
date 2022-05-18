@@ -1,4 +1,4 @@
-(** CS 3110 Spring 2022 Assignment MS1 Final Project
+(** CS 3110 Spring 2022 Assignment Final Project
 
     @author Ari Mirsky, Edmund Lam, Noah Schiff, Rigel Wafford *)
 
