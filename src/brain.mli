@@ -1,34 +1,34 @@
-(** Module represeting a neural network *)
+(** Module represeting a neural network. *)
 
 type t
-(** Type representing a brain *)
+(** Type representing a brain. *)
 
 type mut_params = {
   swap_chance : float;
       (** Chance to completely change a given weight into a new value
           (default 0.005)
 
-          Requires: [0 <= swap_chance < 1] *)
+          Requires: [0 <= swap_chance < 1]. *)
   mutate_chance : float;
       (** Chance to mutate a given weight by adding a random normal
           variable to it (default 0.02)
 
-          Requires: [0 <= mutate_chance < 1] *)
+          Requires: [0 <= mutate_chance < 1]. *)
   mutate_stdev : float;
       (** standard deviation of the normal variable to add to the weight
           (default 1)
 
-          Requires: [0 < mutate_stdev] *)
+          Requires: [0 < mutate_stdev]. *)
 }
 
 val default_params : mut_params
-(** Default mutation parameters *)
+(** Default mutation parameters. *)
 
 val params_of_json : Yojson.Safe.t -> mut_params
-(** [params_of_json j] converts json [j] into mutation parameters *)
+(** [params_of_json j] converts json [j] into mutation parameters. *)
 
 val params_to_json : mut_params -> Yojson.Safe.t
-(** [params_of_json p] converts mutation parameters [p] into json *)
+(** [params_of_json p] converts mutation parameters [p] into json. *)
 
 val create : int -> int -> int -> int list -> t
 (** [create i o m ls] creates a neural network with an input size [i],
