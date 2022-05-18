@@ -92,24 +92,9 @@ let print_matrix (m : float list list) : string =
 (** [print_brain b] pretty-prints brain [b] as a string of a json*)
 let print_brain b = b |> Brain.to_json |> Yojson.Safe.to_string
 
-let cmp_float_lists l1 l2 =
-  let rec cmp a b =
-    match (a, b) with
-    | [], [] -> true
-    | h1 :: t1, h2 :: t2 -> cmp_float h1 h2 && cmp t1 t2
-    | _ -> failwith "lists must have equal length"
-  in
-  cmp l1 l2
-
-let cmp_float_matrices l1 l2 =
-  let rec cmp a b =
-    match (a, b) with
-    | [], [] -> true
-    | h1 :: t1, h2 :: t2 -> cmp_float_lists h1 h2 && cmp t1 t2
-    | _ -> failwith "matrices must have equal sizes"
-  in
-  cmp l1 l2
-
+let cmp_float_lists l1 l2 = Utils.cmp_float_lists l1 l2
+let cmp_float_matrices l1 l2 = Utils.cmp_float_matrices l1 l2
+let cmp_brain b1 b2 = Brain.cmp_brain b1 b2
 let test_matrix = Matrix.of_list [ [ 3.; 1. ]; [ 1.; 0. ] ]
 let dim_matrix = Matrix.of_list [ [ 2.; 3. ]; [ 1.; 4. ]; [ 2.; 1. ] ]
 
@@ -613,14 +598,14 @@ let brain_tests =
             "test/brain1.json" |> Yojson.Safe.from_file
           |> Brain.from_json
           end
-          brain1 ~printer:print_brain );
+          brain1 ~printer:print_brain ~cmp:cmp_brain );
       ( "test brain2 creation" >:: fun _ ->
         assert_equal
           begin
             "test/brain2.json" |> Yojson.Safe.from_file
           |> Brain.from_json
           end
-          brain2 ~printer:print_brain );
+          brain2 ~printer:print_brain ~cmp:cmp_brain );
       ( "Test proper brain creation from json; Convert from JSON, then \
          back into json to test proper saving. Then back from json and \
          compare against brain2."
@@ -630,7 +615,7 @@ let brain_tests =
             "test/brain2.json" |> Yojson.Safe.from_file
           |> Brain.from_json |> Brain.to_json |> Brain.from_json
           end
-          brain2 ~printer:print_brain );
+          brain2 ~printer:print_brain ~cmp:cmp_brain );
       ( "memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem brain1)
           ~printer:print_list ~cmp:cmp_float_lists );
@@ -720,7 +705,7 @@ let brain_tests =
             Random.init random_env;
             mutate ~r:0. default_params brain1
           end
-          ~printer:print_brain );
+          ~printer:print_brain ~cmp:cmp_brain );
       ( "mutate memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ]
           begin
@@ -922,7 +907,7 @@ let brain_tests =
             "test/mated_point5.json" |> Yojson.Safe.from_file
           |> Brain.from_json
           end
-          mated ~printer:print_brain );
+          mated ~printer:print_brain ~cmp:cmp_brain );
       ( "mated memory initially empty" >:: fun _ ->
         assert_equal [ 0.; 0.; 0.; 0.; 0. ] (mem mated)
           ~printer:print_list ~cmp:cmp_float_lists );

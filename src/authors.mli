@@ -1,4 +1,4 @@
-(** CS 3110 Spring 2022 Assignment MS1 Final Project
+(** CS 3110 Spring 2022 Assignment Final Project
 
     @author Ari Mirsky, Edmund Lam, Noah Schiff, Rigel Wafford *)
 
@@ -24,3 +24,6 @@ val ms1_hours_worked : int
 
 val ms2_hours_worked : int
 (** [ms2_hours_worked] is the number of hours worked on MS2. *)
+
+val ms3_hours_worked : int
+(** [ms3_hours_worked] is the number of hours worked on MS3. *)
